@@ -86,37 +86,40 @@
             if(!empty($activeVarientId)){
                 $firstImage = getActiveFrontImg($product->id,$activeVarientId);
                 $secondImage  = getActiveBackImg($product->id,$activeVarientId);
-            } else {
-                $firstImage = getActiveFrontImg($product->id,$product->id);
-                $secondImage  = getActiveBackImg($product->id,$product->id);
-            }
-            if (!empty($firstImage)){ 
+            } 
+            // else {
+            //     $firstImage = getActiveFrontImg($product->id,$product->id);
+            //     $secondImage  = getActiveBackImg($product->id,$product->id);
+            // }
             @endphp
-            <td><a href="{{ env('WEBSITE_URL') .'product/'. productSlug($product->name) . '.html/' . productSlug($product->sku) }}"
+            @if(!empty($firstImage))
+            <td>
+                <a href="{{ env('WEBSITE_URL') .'product/'. productSlug($product->name) . '.html/' . productSlug($product->sku) }}"
                      target="_blank">
-					<img src="{{ env('WEBSITE_URL') . '/uploads/products/' . $firstImage; }}"
+					<img src="{{ env('WEBSITE_URL') . 'uploads/products/' . $firstImage }}"
                         height="70px" width="70px" style="border-radius: 10%" class="if">
                 </a>
             </td>
-            @php } elseif(!empty($product->frontProductImage) || !empty($product->firstProductImage)){  @endphp
+            @elseif(!empty($product->frontProductImage) || !empty($product->firstProductImage)) 
+         
             <td>
                 <img src="https://commons.wikimedia.org/wiki/File:No_Image_Available.jpg" height="70px"
                     width="70px" style="border-radius: 10%" class="elseif">
             </td>
-                <!-- <td><a href="{{ env('WEBSITE_URL'). '/'. $product->sku . '/' . productSlug($product->short_description) }}"
-                        target="_blank">
+                {{-- // <!-- <td><a href="{{ env('WEBSITE_URL'). '/'. $product->sku . '/' . productSlug($product->short_description) }}"
+                //         target="_blank">
 
-                        <img src="{{ $product->frontProductImage?->graphic ?? $product->firstProductImage?->graphic }}"
-                            height="70px" width="70px" style="border-radius: 10%" class="t123">
-                    </a>
-                </td> -->
-             @php } else {   @endphp
+                //         <img src="{{ $product->frontProductImage?->graphic ?? $product->firstProductImage?->graphic }}"
+                //             height="70px" width="70px" style="border-radius: 10%" class="t123">
+                //     </a>
+                // </td> --> --}}
+     
+                @else 
                 <td>
                     <img src="https://commons.wikimedia.org/wiki/File:No_Image_Available.jpg" height="70px"
                         width="70px" style="border-radius: 10%" class="else">
                 </td>
-            @php }  @endphp
-
+            @endif 
             <td class="move-line">
                 <a href="{{ env('WEBSITE_URL') .'product/'. productSlug($product->name) . '.html/' . productSlug($product->sku) }}"
                      target="_blank">

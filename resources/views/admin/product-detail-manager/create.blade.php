@@ -58,6 +58,7 @@
                                             <div class="col-xl-6">
                                                 <label for="field_type" class="form-label">Field Type</label>
                                                 <select name="field_type" id="field_type" class="form-control @error('field_type') is-invalid @enderror select2init">
+                                                    <option value="">Select Field Type</option>
                                                     <option value="ckeditor" {{ (isset($productDetailManager->field_type) && $productDetailManager->field_type == 'ckeditor') ? 'selected' : '' }}>CK Editor</option>
                                                     <option value="textbox" {{ (isset($productDetailManager->field_type) && $productDetailManager->field_type == 'textbox') ? 'selected' : '' }}>TextBox</option>
                                                     <option value="textarea" {{ (isset($productDetailManager->field_type) && $productDetailManager->field_type == 'textarea') ? 'selected' : '' }}>Textarea</option>
@@ -70,37 +71,19 @@
                                                 </select>
                                             </div>
 
-                                            <div class="col-xl-12">
+                                            <div class="col-xl-12 samplePreview">
                                                 <label for="content" class="form-label"><span class="text-danger">*
                                                     </span>Sample Preview</label>
-                                                <div class="content-input-field" style="display:none;">
-                                                    <input type="text"
-                                                        class="form-control @error('content') is-invalid @enderror ContentText"
-                                                        id="contentTextbox"
-                                                        name="content"
-                                                        value="{{isset($productDetailManager->content) ? $productDetailManager->content: old('content')}}"
-                                                        placeholder="Sample Preview"
-                                                        style="height: 100px;" disabled>
+                                                <div class="content-input-field d-none">
+                                                    <input type="text" class="form-control @error('content') is-invalid @enderror ContentText" id="contentTextbox" name="content" placeholder="Sample Preview" style="height: 100px;">
                                                 </div>
 
-                                                <div class="content-textarea-field" style="display:none;">
-                                                    <textarea 
-                                                        class="form-control @error('content') is-invalid @enderror ContentTextArea"
-                                                        id="contentTextarea"
-                                                        name="content"
-                                                        rows="4"
-                                                        placeholder="Sample Preview"
-                                                        style="height: 100px;" disabled>{{ isset($productDetailManager->content) ? $productDetailManager->content : old('content') }}</textarea>
+                                                <div class="content-textarea-field d-none">
+                                                    <textarea class="form-control @error('content') is-invalid @enderror ContentTextArea" id="contentTextarea" name="content" rows="4" placeholder="Sample Preview" style="height: 100px;">{{ isset($productDetailManager->content) ? $productDetailManager->content : old('content') }}</textarea>
                                                 </div>
 
-                                                <div class="content-ckeditor-field" style="display:none;">
-                                                    <textarea 
-                                                        class="form-control ck_content @error('content') is-invalid @enderror ContentCkeditor"
-                                                        id="contentCkeditor"
-                                                        name="content"
-                                                        rows="4"
-                                                        placeholder="Sample Preview"
-                                                        style="height: 100px;" disabled>{{ isset($productDetailManager->content) ? $productDetailManager->content : old('content') }}</textarea>
+                                                <div class="content-ckeditor-field d-none">
+                                                    <textarea class="form-control ck_content @error('content') is-invalid @enderror ContentCkeditor" id="contentCkeditor" name="content" rows="4" placeholder="Sample Preview" style="height: 100px;">{{ isset($productDetailManager->content) ? $productDetailManager->content : old('content') }}</textarea>
                                                 </div>
 
                                                 @if ($errors->has('content'))
@@ -133,7 +116,10 @@
 <!-- Select2 Cdn -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{{ asset('public/assets/plugin/tagify/tagify.min.js') }}"></script>
-
+<script>
+    window.CKEDITOR_BASEPATH = "{{ asset('assets/js/ckeditor/') }}/";
+</script>
+<script src="{{ asset('assets/js/ckeditor/ckeditor.js') }}"></script>
 <!-- Internal Select-2.js -->
 <script src="{{ asset('public/assets/js/select2.js') }}"></script>
 <script src="{{ asset('public/assets/libs/dropzone/dropzone-min.js') }}"></script>
@@ -141,31 +127,44 @@
 <script src="{{ asset('public/assets/plugin/jquery-validation/jquery.validate.min.js') }}"></script>
 <script src="{{ asset('public/assets/js/repeater.js')}}"></script>
 <script>
+    $('.samplePreview').addClass('d-none'); 
     function initContentField() {
         var selectedValue = $('#field_type').val();
 
-        $('.content-input-field, .content-textarea-field, .content-ckeditor-field').hide().find('input, textarea').prop('disabled', true);
-
+        $('.samplePreview').removeClass('d-none'); 
         if (selectedValue === 'textbox') {
-            $('.content-input-field').show().find('input').prop('disabled', false);
+              $('.content-ckeditor-field').addClass('d-none');
+            $('.content-textarea-field').addClass('d-none'); 
+            $('.content-input-field').removeClass('d-none'); 
         } else if (selectedValue === 'textarea') {
-            $('.content-textarea-field').show().find('textarea').prop('disabled', false);
+             $('.content-ckeditor-field').addClass('d-none');
+            $('.content-textarea-field').removeClass('d-none'); 
+            $('.content-input-field').addClass('d-none'); 
         } else if (selectedValue === 'ckeditor') {
-            $('.content-ckeditor-field').show().find('textarea').prop('disabled', false);
-            if (typeof CKEDITOR !== 'undefined' && !CKEDITOR.instances['contentCkeditor']) {
-                CKEDITOR.replace('contentCkeditor', {
-                    filebrowserUploadUrl: '{{ url('base/uploder') }}',
-                    enterMode: CKEDITOR.ENTER_BR
+            $('.content-ckeditor-field').removeClass('d-none');
+            $('.content-textarea-field').addClass('d-none'); 
+            $('.content-input-field').addClass('d-none'); 
+            if (typeof CKEDITOR === 'undefined' || !CKEDITOR || !CKEDITOR.replace) return;
+
+            document.querySelectorAll('textarea.ck_content').forEach(function (textarea) {
+                if (!textarea.id) return;
+
+                if (CKEDITOR.instances[textarea.id]) {
+                    return;
+                }
+
+                CKEDITOR.replace(textarea.id, {
+                    enterMode: CKEDITOR.ENTER_BR,
+                    allowedContent: true
                 });
-                CKEDITOR.config.allowedContent = true;
-            }
+            });
         }
     }
 
-    $(document).ready(function() {
-        $('#field_type').on('change', initContentField);
+    $(document).on('change','#field_type',function(){
         initContentField();
     });
+
 </script>
 
 @endpush

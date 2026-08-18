@@ -134,11 +134,11 @@
                                 <div class="form-group">
                                     <label for="sku">SKU <!--<span class="text-danger">*</span> --></label>
                                     <input type="text" class="form-control @error('sku') is-invalid @enderror" id="sku" value="{{ $product->sku }}" name="sku"  placeholder="SKU">
-                                    <!-- @if ($errors->has('sku'))
+                                    {{-- <!-- @if ($errors->has('sku'))
                                         <div class=" invalid-feedback">
                                             {{ $errors->first('sku') }}
                                         </div>
-                                    @endif -->
+                                    @endif --> --}}
                                 </div>
                             </div>
                             <div class="col  mb-3">
@@ -166,129 +166,32 @@
             <hr>
             <div class="card-body">
                 <div class="row">
-                    <div id="productDescriptionSection" class="{{ $productDetailSections && $productDetailSections->count() > 0 ? '' : 'd-none' }}">
-                        @php
-                            $managedSlugs = $productDetailSections ? $productDetailSections->map(function($item) {
-                                return \Illuminate\Support\Str::slug($item->section_name, '_');
-                            })->toArray() : [];
-                        @endphp
-                        @if($productDetailSections)
-                            @php $i = 1; @endphp
-                            @foreach($productDetailSections as $detailManager)
-                                @php
-                                    $fieldName = \Illuminate\Support\Str::slug($detailManager->section_name, '_');
-                                    $fieldValue = old($fieldName, $product->{$fieldName} ?? '');
-                                @endphp
-                                <div class="col-md-12 mb-3 product-detail-field" data-manager-field="{{ $fieldName }}" data-manager-slug="{{ \Illuminate\Support\Str::slug($detailManager->section_name, '_') }}">
-                                    <div class="form-group">
-                                        <label for="{{ $fieldName }}">{{ $detailManager->section_name }}</label>
-                                        @if($detailManager->field_type == 'ckeditor')
-                                            <textarea class="form-control ck_content @error($fieldName) is-invalid @enderror" name="content[]" 
-                                            id="{{ $fieldName }}" rows="4">
-                                            <?php if($product->{'content_'.$i}){
-                                                echo @$product->{'content_'.$i};
-                                            } else {
-                                                echo $detailManager->content;    
-                                            } ?>
-                                            </textarea>
-                                        @elseif($detailManager->field_type == 'textarea')
-                                            <textarea class="form-control @error($fieldName) is-invalid @enderror" name="content[]" 
-                                            id="{{ $fieldName }}" rows="4">
-                                            <?php if($product->{'content_'.$i}){
-                                                echo @$product->{'content_'.$i};
-                                            } else {
-                                                echo $detailManager->content;    
-                                            } ?>
-                                        </textarea>
-                                        @else
-                                            <input class="form-control @error($fieldName) is-invalid @enderror" name="content[]" 
+                    @foreach($productDetailSections as $key =>  $detail)
+                        <div class="col-md-6  mb-3">
+                            <div class="form-group">
+                                     @php
+                                        $section = Str::snake(
+                                            preg_replace('/[^A-Za-z0-9]+/', ' ', $detail->section_name)
+                                        );
+                                        $fieldName = \Illuminate\Support\Str::snake(preg_replace('/[^A-Za-z0-9]+/', ' ', $detail->section_name));
+                                        $nameAttribute = "content_".$key+1; 
+                                    @endphp
+                                <label for="{{ $section }}">{{ $detail->section_name }}</label>
+                                @if($detail->field_type == 'ckeditor' || $detail->field_type == 'textarea')
+                                    <textarea class="form-control @if($detail->field_type == 'ckeditor') ck_content @endif"  name="content[]" id="{{ $section }}" rows="4">@if($product->$nameAttribute)  {{ $product->$nameAttribute }} @else {{ $detail->content }} @endif  </textarea>
+                                @else 
+                                <input type="text" class="form-control @error($fieldName) is-invalid @enderror" name="content[]" 
                                             id="{{ $fieldName }}" 
-                                            value="<?php if($product->{'content_'.$i}){
-                                                echo @$product->{'content_'.$i};
+                                            value="<?php if($product->{'content_'.$key}){
+                                                echo @$product->{'content_'.$key};
                                             } else {
-                                                echo $detailManager->content;    
+                                                echo $detail->content;    
                                             } ?>" 
                                             />
-                                        @endif
-                                        @if ($errors->has($fieldName))
-                                            <div class="invalid-feedback">
-                                                {{ $errors->first($fieldName) }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                @php $i++; @endphp
-                            @endforeach
-                        @endif
-
-                        <!-- <div class="invalid-feedback-1" id="p-{{ \Illuminate\Support\Str::slug($productDetailSections->last()->section_name ?? 'description', '_') }}"></div>
-
-                        @if(!in_array('short_description', $managedSlugs))
-                        <div class="col-md-12 mb-3 product-detail-field" data-manager-field="short_description">
-                            <div class="form-group">
-                                <label for="short_description">Short Description</label>
-                                <textarea class="form-control" name="short_description" id="short_description" rows="4">{{ $product->short_description }}</textarea>
+                                @endif 
                             </div>
                         </div>
-                        @endif
-
-                        @if(!in_array('description', $managedSlugs))
-                        <div class="col-md-12 mb-3 product-detail-field" data-manager-field="description">
-                            <div class="form-group">
-                                <label for="description">Product Description <span class="text-danger"></span></label>
-                                <textarea class="form-control ck_content @error('description') is-invalid @enderror" name="description" id="description" rows="4">{{ $product->description }}</textarea>
-                                @if ($errors->has('description'))
-                                    <div class="invalid-feedback">
-                                        {{ $errors->first('description') }}
-                                    </div>
-                                @endif
-                                <div class="invalid-feedback-1" id="p-description"></div>
-                            </div>
-                        </div>
-                        @endif
-
-                        @if(!in_array('specification', $managedSlugs))
-                        <div class="col-md-12 mb-3 product-detail-field" data-manager-field="specification">
-                            <div class="form-group">
-                                <label for="specification">Product Specification <span class="text-danger"></span></label>
-                                <textarea class="form-control ck_content @error('specification') is-invalid @enderror" name="specification" id="specification" rows="4">{{ $product->specification }}</textarea>
-                                @if ($errors->has('specification'))
-                                    <div class="invalid-feedback">
-                                        {{ $errors->first('specification') }}
-                                    </div>
-                                @endif
-                                <div class="invalid-feedback-1" id="p-specification"></div>
-                            </div>
-                        </div>
-                        @endif
-
-                        @if(!in_array('product_details', $managedSlugs))
-                        <div class="col-md-12 mb-3 product-detail-field" data-manager-field="product_details">
-                            <div class="form-group">
-                                <label for="product_details">Product Details</label>
-                                <textarea class="form-control ck_content" name="product_details" id="product_details" rows="4">{{ $product->product_details }}</textarea>
-                            </div>
-                        </div>
-                        @endif
-
-                        @if(!in_array('others', $managedSlugs))
-                        <div class="col-md-12 mb-3 product-detail-field" data-manager-field="others">
-                            <div class="form-group">
-                                <label for="others">Disclaimer</label>
-                                <textarea class="form-control ck_content" name="others" id="others" rows="4">{{ $product->others }}</textarea>
-                            </div>
-                        </div>
-                        @endif
-
-                        @if(!in_array('wash_care', $managedSlugs))
-                        <div class="col-md-12 mb-3 product-detail-field" data-manager-field="wash_care">
-                            <div class="form-group">
-                                <label for="wash_care">Dimensions</label>
-                                <textarea class="form-control ck_content" name="wash_care" id="wash_care" rows="4">{{ $product->wash_care }}</textarea>
-                            </div>
-                        </div>
-                        @endif -->
-                    </div>
+                    @endforeach 
                 </div>
             </div>
 
@@ -479,9 +382,8 @@
                             value="{{ $product->min_selling_units }}">
                     </div>
                 </div>
+                
             </div>
-
-
 
             {{-- Modal for New Attribute --}}
             <div class="modal fade" id="addAttributeModal" tabindex="-1" aria-labelledby="addAttributeModalLabel"
@@ -535,8 +437,6 @@
                                 Upload Product Image & Video
                             </label>
                         </div>
-
-
                         <div class="row align-items-start mb-4">
                             <div class="col-auto m-3">
                                 <button type="button" class="btn btn-outline-secondary image_upload_button" data-bs-toggle="modal" data-bs-target="#uploadModal_{{ $product->id }}">
@@ -647,10 +547,42 @@
                     </div>    
                 </div>
                 @endif
+                <div class="row mt-3">
+                    <h3><u>Seo Feature</u></h3>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="meta_title">Meta Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="meta_title" id="meta_title" value="{{$product->meta_title}}" />
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="meta_keywords">Meta Keywords</label>
+                            <input type="text" class="form-control" name="meta_keywords" id="meta_keywords" value="{{$product->meta_keywords}}"  />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="meta_description">Meta Description </label>
+                            <textarea class="form-control" name="meta_description" id="meta_description" cols="30" rows="3">{{$product->meta_description }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="seo_content">Web SEO Content </label>
+                            <textarea class="form-control" name="seo_content" id="seo_content" cols="30" rows="3">{{$product->seo_content }}</textarea>
+                        </div>
+                    </div>
+                </div>
             </div>
             
 
-            <div class="mb-3 text-first btn_add">
+            <div class="mb-3 text-first btn_add mt-3">
                 <?php
                 if(@$product->product_type==1){
                     $previousStep = 'step1';
@@ -658,9 +590,9 @@
                     $previousStep = 'step2';
                 }
                 ?>
-                <button type="button" class="btn btn-primary prevBtn" onclick="onclickPrevious('<?php echo $previousStep; ?>')">Preview</button>
-                <button type="button" id="next" class="btn btn-primary nextBtn">Save & Continue</button>
-                <button type="button" id="finish" class="btn btn-primary nextBtn">Finish</button>
+                <button type="button" class="btn btn-primary prevBtn btn-lg" onclick="onclickPrevious('step1')">Previous</button>
+                <button type="button" id="finish" class="btn btn-primary nextBtn btn-lg">Save</button>
+                {{-- <button type="button" id="finish" class="btn btn-primary nextBtn">Finish</button> --}}
             </div>
         </div>
 
@@ -674,11 +606,11 @@
 
             <div class="card-body">
 
-                <!-- <div class="form-check form-switch">
+                {{-- <!-- <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" role="switch" id="is_new" name="is_new"
                         @if (isset($product) && $product->is_new == 1) checked @endif />
                     <label class="form-check-label" for="status">New In</label>
-                </div> -->
+                </div> --> --}}
 
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" role="switch" id="is_new"
@@ -687,7 +619,7 @@
                 </div>
 
 
-                <!-- <div class="form-check form-switch">
+                {{-- <!-- <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" role="switch" id="is_featured"
                         name="is_featured" @if (isset($product) && $product->is_featured == 1) checked @endif />
                     <label class="form-check-label" for="is_featured">Featured Products</label>
@@ -703,7 +635,7 @@
                     <input class="form-check-input" type="checkbox" role="switch" id="status"
                         name="best_selling" @if (isset($product) && $product->best_selling == 1) checked @endif />
                     <label class="form-check-label" for="status">Best Selling</label>
-                </div> -->
+                </div> --> --}}
 
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" role="switch" id="status"
@@ -720,7 +652,7 @@
             </div>
             <hr>
 
-            @php
+            {{-- @php
                 $selectedCategories = is_array(json_decode($product->category_id, true))
                     ? json_decode($product->category_id, true)
                     : [];
@@ -735,7 +667,6 @@
 
             <div class="card-body">
                 @if ($activeCategorie->category_type_id == 2)
-                    {{-- Main Category --}}
                     <div class="form-check">
                         <input class="form-check-input main-cat-checkbox" type="checkbox"
                             id="main_cat_{{ $activeCategorie->id }}" name="category_id[]"
@@ -747,7 +678,6 @@
                         </label>
                     </div>
 
-                    {{-- Subcategories --}}
                     @if ($activeCategorie && $activeCategorie->children)
                         <div id="subcategories_{{ $activeCategorie->id }}" class="ms-3">
                             @foreach ($activeCategorie->children as $sub)
@@ -762,8 +692,6 @@
                                         {{ $sub->name }}
                                     </label>
                                 </div>
-
-                                {{--  Child Categories --}}
                                 @if ($sub->children)
                                     <div id="childcategories_{{ $sub->id }}" class="ms-4">
                                         @foreach ($sub->children as $child)
@@ -784,20 +712,125 @@
                         </div>
                     @endif
                 @endif
-            </div>
+            </div> --}}
+            @php
+            $selectedCategories = json_decode($product->category_id, true);
+            $selectedCategories = is_array($selectedCategories) ? $selectedCategories : [];
 
-            <div class="card-header mt-3 mb-3">
+            $selectedSubCategories = json_decode($product->sub_category_id, true);
+            $selectedSubCategories = is_array($selectedSubCategories) ? $selectedSubCategories : [];
+
+            $selectedChildCategories = json_decode($product->child_category_id, true);
+            $selectedChildCategories = is_array($selectedChildCategories) ? $selectedChildCategories : [];
+        @endphp
+
+        <div class="card-body">
+
+            @foreach ($categories as $category)
+
+                {{-- MAIN CATEGORY --}}
+                <div class="form-check">
+                    <input
+                        class="form-check-input main-cat-checkbox"
+                        type="checkbox"
+                        id="main_cat_{{ $category->id }}"
+                        name="category_id[]"
+                        value="{{ $category->id }}"
+                        data-product-detail-managers="{{ $category->product_detail_manager ?? '' }}"
+                        @checked(
+                            $product->main_category_id == $category->id ||
+                            in_array($category->id, $selectedCategories)
+                        )
+                        onchange="toggleSubCategories({{ $category->id }})"
+                    >
+
+                    <label
+                        class="form-check-label"
+                        for="main_cat_{{ $category->id }}"
+                    >
+                        {{ $category->name }}
+                    </label>
+                </div>
+                @if ($category->children->count())
+
+                    <div
+                        id="subcategories_{{ $category->id }}"
+                        class="ms-4"
+                    >
+
+                        @foreach ($category->children as $sub)
+
+                            <div class="form-check">
+
+                                <input
+                                    class="form-check-input sub-cat-checkbox"
+                                    type="checkbox"
+                                    id="sub_cat_{{ $sub->id }}"
+                                    name="sub_category_id[]"
+                                    value="{{ $sub->id }}"
+                                    data-product-detail-managers="{{ $sub->product_detail_manager ?? '' }}"
+                                    @checked(
+                                        $product->main_sub_category_id == $sub->id ||
+                                        in_array($sub->id, $selectedSubCategories)
+                                    )
+                                    onchange="toggleChildCategories({{ $sub->id }})"
+                                >
+
+                                <label
+                                    class="form-check-label"
+                                    for="sub_cat_{{ $sub->id }}"
+                                >
+                                    {{ $sub->name }}
+                                </label>
+                            </div>
+                            @if ($sub->children->count())
+                                <div
+                                    id="childcategories_{{ $sub->id }}"
+                                    class="ms-5"
+                                >
+                                    @foreach ($sub->children as $child)
+                                        <div class="form-check">
+                                            <input
+                                                class="form-check-input child-cat-checkbox"
+                                                type="checkbox"
+                                                id="child_cat_{{ $child->id }}"
+                                                name="child_category_id[]"
+                                                value="{{ $child->id }}"
+                                                data-product-detail-managers="{{ $child->product_detail_manager ?? '' }}"
+                                                @checked(
+                                                    $product->main_child_category_id == $child->id ||
+                                                    in_array($child->id, $selectedChildCategories)
+                                                )
+                                            >
+                                            <label
+                                                class="form-check-label"
+                                                for="child_cat_{{ $child->id }}"
+                                            >
+                                                {{ $child->name }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
+                <hr>
+            @endforeach
+        </div>
+
+            {{-- <div class="card-header mt-3 mb-3">
                 <div class="card-title">
                     <h6>Collection</h6>
                 </div>
             </div>
-            <hr>
+            <hr> --}}
 
             <!-- Add Code by mohit for multiple category selected -->
-            <div class="card-body">
+            {{-- <div class="card-body">
                 @foreach ($categories as $category)
                     @if ($category->category_type_id == 1)
-                        {{-- Main Category --}}
+                        
                         <div class="form-check">
                             <input class="form-check-input main-cat-checkbox" type="checkbox"
                                 id="main_cat_{{ $category->id }}" name="category_id[]" value="{{ $category->id }}"
@@ -809,7 +842,7 @@
                             </label>
                         </div>
 
-                        {{-- Subcategories --}}
+                  
                         <div id="subcategories_{{ $category->id }}" class="ms-3">
                             @foreach ($category->children as $sub)
                                 <div class="form-check">
@@ -824,7 +857,7 @@
                                     </label>
                                 </div>
 
-                                {{-- Child Categories --}}
+                         
                                 <div id="childcategories_{{ $sub->id }}"
                                     class="ms-4 {{ in_array($sub->id, (array) $product_details->sub_category_id) ? '' : 'd-none' }}">
                                     @foreach ($sub->children as $child)
@@ -843,7 +876,7 @@
                         </div>
                     @endif
                 @endforeach
-            </div>
+            </div> --}}
 
 
             <!-- End code by Mohit -->
@@ -858,7 +891,7 @@
             @php
                 $selectedTags = explode(',', $product->product_tags ?? '');
             @endphp
-            <!-- <div class="card-body">
+            {{-- <!-- <div class="card-body">
                 <div class="row">
                     <div class="col">
                         <div class="form-group">
@@ -875,7 +908,7 @@
                         </div>
                     </div>
                 </div>
-            </div> -->
+            </div> --> --}}
 
         </div>
     </div>
@@ -910,95 +943,116 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
-
-
+<script>
+    window.CKEDITOR_BASEPATH = "{{ asset('assets/js/ckeditor/') }}/";
+</script>
+<script src="{{ asset('assets/js/ckeditor/ckeditor.js') }}"></script>
+<script>
+    CKEDITOR.replace('seo_content');
+    CKEDITOR.replace('meta_description');
+    CKEDITOR.replace('short_description'); 
+</script>
+@foreach($productDetailSections as $datas)
+     @php
+        $section = Str::snake(
+            preg_replace('/[^A-Za-z0-9]+/', ' ', $datas->section_name)
+        );
+    @endphp
+    @if($datas->field_type == 'ckeditor')
+        <script>
+            CKEDITOR.replace("{{ $section }}")
+        </script>
+    @endif 
+@endforeach
 <script>
     var getAttributesValues = "{{ route('admin-product-attribute-values') }}";
     var getSubCategory = "{{ route('admin-product-ajax-subcategory') }}";
     var getProduct = "{{ route('admin-product-ajax-getproduct') }}";
     var productLimit = "{{ url('admin/product/update-product-variant-limit/') }}";
-    var productDetailManagerMap = @json(\App\Models\ProductDetailManager::get()->mapWithKeys(function($item) {
-        return [$item->id => \Illuminate\Support\Str::slug($item->section_name, '_')];
-    })->toArray());
-    var productDetailManagerFieldMap = {
-        short_description: ['short description', 'short_description'],
-        description: ['product description', 'description'],
-        specification: ['product specification', 'specification'],
-        product_details: ['product details', 'product_details'],
-        others: ['disclaimer', 'others', 'desclaimer'],
-        wash_care: ['dimensions', 'wash care', 'wash_care']
-    };
+    window.attributes = @json($attributesData);
+    window.preselectedAttributes = @json($preselectedAttributes);
+    // var productDetailManagerMap = @json(\App\Models\ProductDetailManager::get()->mapWithKeys(function($item) {
+    //     return [$item->id => \Illuminate\Support\Str::slug($item->section_name, '_')];
+    // })->toArray());
+    // var productDetailManagerFieldMap = {
+    //     short_description: ['short description', 'short_description'],
+    //     description: ['product description', 'description'],
+    //     specification: ['product specification', 'specification'],
+    //     product_details: ['product details', 'product_details'],
+    //     others: ['disclaimer', 'others', 'desclaimer'],
+    //     wash_care: ['dimensions', 'wash care', 'wash_care']
+    // };
 
-    function normalizeManagerName(name) {
-        return name ? name.toString().trim().toLowerCase() : '';
-    }
+    // function normalizeManagerName(name) {
+    //     return name ? name.toString().trim().toLowerCase() : '';
+    // }
 
-    function getSelectedProductDetailManagerIds() {
-        const ids = new Set();
+    // function getSelectedProductDetailManagerIds() {
+    //     const ids = new Set();
 
-        document.querySelectorAll('input[type="checkbox"][data-product-detail-managers]').forEach(function (checkbox) {
-            if (!checkbox.checked) return;
-            const raw = checkbox.dataset.productDetailManagers || '';
-            raw.split(',').map(function (id) {
-                const trimmed = id.trim();
-                if (trimmed) ids.add(trimmed);
-            });
-        });
+    //     document.querySelectorAll('input[type="checkbox"][data-product-detail-managers]').forEach(function (checkbox) {
+    //         if (!checkbox.checked) return;
+    //         const raw = checkbox.dataset.productDetailManagers || '';
+    //         raw.split(',').map(function (id) {
+    //             const trimmed = id.trim();
+    //             if (trimmed) ids.add(trimmed);
+    //         });
+    //     });
 
-        return Array.from(ids);
-    }
+    //     return Array.from(ids);
+    // }
 
-    function getSelectedProductDetailManagerNames() {
-        return getSelectedProductDetailManagerIds()
-            .map(function (id) {
-                return productDetailManagerMap[id] || '';
-            })
-            .map(normalizeManagerName)
-            .filter(function (name) {
-                return name;
-            });
-    }
+    // function getSelectedProductDetailManagerNames() {
+    //     return getSelectedProductDetailManagerIds()
+    //         .map(function (id) {
+    //             return productDetailManagerMap[id] || '';
+    //         })
+    //         .map(normalizeManagerName)
+    //         .filter(function (name) {
+    //             return name;
+    //         });
+    // }
 
-    function updateProductDescriptionSection() {
-        const section = document.getElementById('productDescriptionSection');
-        if (!section) return;
+    // function updateProductDescriptionSection() {
+    //     const section = document.getElementById('productDescriptionSection');
+    //     if (!section) return;
 
-        const selectedNames = getSelectedProductDetailManagerNames();
-        const hasProductDetail = selectedNames.length > 0;
+    //     const selectedNames = getSelectedProductDetailManagerNames();
+    //     const hasProductDetail = selectedNames.length > 0;
 
-        section.classList.toggle('d-none', !hasProductDetail);
+    //     section.classList.toggle('d-none', !hasProductDetail);
 
-        section.querySelectorAll('[data-manager-field]').forEach(function (field) {
-            const key = field.dataset.managerField;
-            const fieldSlug = normalizeManagerName(field.dataset.managerSlug || '');
-            const aliases = productDetailManagerFieldMap[key] || [];
-            const shouldShow = selectedNames.some(function (name) {
-                return aliases.includes(name) || name === fieldSlug;
-            });
-            field.classList.toggle('d-none', !shouldShow);
-        });
-    }
+    //     section.querySelectorAll('[data-manager-field]').forEach(function (field) {
+    //         const key = field.dataset.managerField;
+    //         const fieldSlug = normalizeManagerName(field.dataset.managerSlug || '');
+    //         const aliases = productDetailManagerFieldMap[key] || [];
+    //         const shouldShow = selectedNames.some(function (name) {
+    //             return aliases.includes(name) || name === fieldSlug;
+    //         });
+    //         field.classList.toggle('d-none', !shouldShow);
+    //     });
+    // }
 
-    function initProductDetailCkeditors() {
-        if (typeof CKEDITOR === 'undefined' || !CKEDITOR || !CKEDITOR.replace) return;
+    // function initProductDetailCkeditors() {
+    //     if (typeof CKEDITOR === 'undefined' || !CKEDITOR || !CKEDITOR.replace) return;
 
-        document.querySelectorAll('textarea.ck_content').forEach(function (textarea) {
-            if (!textarea.id) return;
+    //     document.querySelectorAll('textarea.ck_content').forEach(function (textarea) {
+    //         if (!textarea.id) return;
 
-            if (CKEDITOR.instances[textarea.id]) {
-                return;
-            }
+    //         if (CKEDITOR.instances[textarea.id]) {
+    //             return;
+    //         }
 
-            CKEDITOR.replace(textarea.id, {
-                enterMode: CKEDITOR.ENTER_BR,
-                allowedContent: true
-            });
-        });
-    }
+    //         CKEDITOR.replace(textarea.id, {
+    //             enterMode: CKEDITOR.ENTER_BR,
+    //             allowedContent: true
+    //         });
+    //     });
+    // }
 
-    $(document).on('change', 'input[type="checkbox"][data-product-detail-managers]', function () {
-        updateProductDescriptionSection();
-    });
+    // $(document).on('change', 'input[type="checkbox"][data-product-detail-managers]', function () {
+    //     updateProductDescriptionSection();
+    // });
 </script>
 
 <script src="{{ asset('assets/js/product/add-product.js') }}"></script>
@@ -1056,11 +1110,11 @@
     $(document).ready(function() {
 
         // Active step 3 linktab &  stepdiv 
-        $(".tab-pane").removeClass("active");
-        $("#tab3").addClass("active");
+        // $(".tab-pane").removeClass("active");
+        // $("#tab3").addClass("active");
 
-        $(".nav-link").removeClass("active");
-        $('#step3').addClass("active");
+        // $(".nav-link").removeClass("active");
+        // $('#step3').addClass("active");
 
         $('#productForm').validate({
             errorClass: 'is-invalid',
@@ -1077,8 +1131,8 @@
             }
         });
 
-        updateProductDescriptionSection();
-        initProductDetailCkeditors();
+        // updateProductDescriptionSection();
+        // initProductDetailCkeditors();
 
         $('.nextBtn').on('click', function(e) {
             var nextBtnId = $(this).attr('id');
@@ -1091,7 +1145,7 @@
             }
             const form = $('#productForm');
 
-            if (form.valid()) {
+            // if (form.valid()) {
                 const formData = new FormData(form[0]);
 
                 $.ajax({
@@ -1110,27 +1164,20 @@
                             Processing...
                         `);
                     },
-                    success: function(res) {
-                        if(!res.success){
-                            Swal.fire({ icon: 'error', title: 'Validation Error', text: res.message });
-                            $btn.prop('disabled', false).html(originalHtml);
+                    success: function(response) {
+                        if(!response.success){
+                            Swal.fire({ icon: 'error', title: 'Validation Error', text: response.message });
                             return false;
                         } else {
                             if(nextBtnId=='finish'){
                                 window.location.href = "{{ route('admin-product-list') }}";
                                 return false;
                             }
-                            if (res.success && res.step==2) {
-                                $('#tab2').html(res.varient);
-                            } else if (res.success && res.step==3) {
-                                $('#tab3').html(res.mainView);
-                            } else if (res.success && res.step==4) {
-                                $('#tab4').html(res.seoView);
-                            } else {
-                                alert(res.message || "Something went wrong");
-                            }
+                            $('#tab2').html("");
+                            $('#formTabs .nav-link').removeClass('active');
+                            $('#formTabs .nav-link[data-tab="tab4"]').addClass('active');
+                            $('#tab2').html(response.seoView);
                         }
-                        $btn.prop('disabled', false).html(originalHtml);
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
@@ -1186,7 +1233,7 @@
                     // $btn.prop('disabled', false).html(originalHtml);
 
                 });
-            }
+            // }
         });
     });
 
@@ -1206,46 +1253,46 @@
     });
 
 
-    // function onclickPrevious(value) {
-    //     const $btn = $('.prevBtn');
-    //     const originalHtml = $btn.html();
-    //     const formData = new FormData();
-    //     formData.append('product_id', $('#product_id').val());
-    //     formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
-    //     formData.append('step', "step2");
+    function onclickPrevious(value) {
+        const $btn = $('.prevBtn');
+        const originalHtml = $btn.html();
+        const formData = new FormData();
+        formData.append('product_id', $('#product_id').val());
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        formData.append('step', "step2");
 
-    //     $.ajax({
-    //         url: "{{ route('admin-product-previousStep') }}",
-    //         type: "POST",
-    //         data: formData,
-    //         contentType: false,
-    //         processData: false,
-    //         beforeSend: function() {
-    //             $btn.prop('disabled', true).html(`
-    //             <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-    //             Processing...
-    //         `);
-    //         },
-    //         success: res => {
-    //             if (res.success) {
-    //                 $('#formTabs .nav-link').removeClass('active');
-    //                 $('#formTabs .nav-link[data-tab="tab2"]').addClass('active');
-    //                 $('#tab2').html("").html(res.mainView);
-    //             } else {
-    //                 alert(res.message || 'Something went wrong.');
-    //             }
+        $.ajax({
+            url: "{{ route('admin-product-previousStep') }}",
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            beforeSend: function() {
+                $btn.prop('disabled', true).html(`
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Processing...
+            `);
+            },
+            success: res => {
+                if (res.success) {
+                    $('#formTabs .nav-link').removeClass('active');
+                    $('#formTabs .nav-link[data-tab="tab2"]').addClass('active');
+                    $('#tab2').html("").html(res.mainView);
+                } else {
+                    alert(res.message || 'Something went wrong.');
+                }
 
 
-    //         },
-    //         error: xhr => {
-    //             const msg = xhr.status === 422 ?
-    //                 Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n') :
-    //                 'Server error';
-    //             alert(msg);
-    //         },
-    //         complete: function() {
-    //             $btn.prop('disabled', false).html(originalHtml);
-    //         }
-    //     });
-    // }
+            },
+            error: xhr => {
+                const msg = xhr.status === 422 ?
+                    Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n') :
+                    'Server error';
+                alert(msg);
+            },
+            complete: function() {
+                $btn.prop('disabled', false).html(originalHtml);
+            }
+        });
+    }
 </script>

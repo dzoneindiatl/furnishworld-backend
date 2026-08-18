@@ -317,7 +317,7 @@ class CategoryController extends Controller
     public function updateCategoryStatus(Request $request)
     {
         $model = Category::find($request->id);
-        if ($model && in_array($request->field, ['is_active', 'show_on_home', 'show_on_menu'])) {
+        if ($model && in_array($request->field, ['is_active', 'show_on_home', 'show_on_menu','is_featured'])) {
             $model->{$request->field} = $request->value;
             $model->save();
 

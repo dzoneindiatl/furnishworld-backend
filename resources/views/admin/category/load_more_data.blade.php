@@ -3,12 +3,19 @@
         <tr class="list-data-row items-inner" data-total-count="{{ $totalResults }}" data-id = "{{ $result->id }}">
             <td>
                 @if (!empty($result->image))
-                    <img height="50" width="50" class="cat-img" src="{{ env('WEBSITE_URL') . '/uploads/categories/' . $result->image }}" />
+                    <img height="50" width="50" class="cat-img" src="{{ env('WEBSITE_URL') . 'uploads/categories/' . $result->image }}" />
                 @endif
             </td>
 
             <td>{{ $result->name ?? 'N/A' }}</td>
             <td>{{ $result->category_type_id == 1 ? 'Collection' : 'Category' }}</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" class="toggle-status" data-id="{{ $result->id }}" data-field="is_featured"
+                        {{ $result->is_featured ? 'checked' : '' }}>
+                    <span class="slider round"></span>
+                </label>
+            </td>
             <td>
                 <label class="switch">
                     <input type="checkbox" class="toggle-status" data-id="{{ $result->id }}" data-field="show_on_menu"
@@ -147,4 +154,5 @@
             });
         },
     });
+ 
 </script>

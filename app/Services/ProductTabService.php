@@ -12,45 +12,34 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ProductVariantSpecialization; 
 
 class ProductTabService
 {
 
 
-    public function step1(array $data): Product
-    {
-        Product::where('product_order', 1)->update(['product_order' => 2]);
+    public function step1(array $data)
+    {    
 
         $product = isset($data['product_id']) && $data['product_id']
             ? Product::findOrFail($data['product_id'])
-            : new Product();
-
+            : new Product(); 
         $product->product_type         = $data['product_type'];
         $product->main_category_id     = $data['main_category_id'];
         $product->main_sub_category_id = $data['main_sub_category_id'] ?? null;
         $product->main_child_category_id  = $data['main_child_cate_id'] ?? null;
-        $product->product_order  = 1;
+        $product->collection_ids          = $data['product_collection_id'] ?? null; 
 
         $product->save();
-
-        return $product;
-    }
-
-    public function step2(array $data)
-    {
-        $productId = $data['product_id'];
-
+        $productId = $product->id ;  
         \DB::transaction(function () use ($data, $productId) {
 
             $incomingVariants = $data['variant'] ?? [];
-            $incomingVariantValues = $data['variant_values'] ?? [];
-
+            // $incomingVariantValues = $data['variant_values'] ?? [];
+                info("-----------incoming variants------step1---------",[$incomingVariants]); 
             $existingVariants = ProductVariant::where('product_id', $productId)->get()->keyBy('variant_id');
-
             $existingValues = ProductVariantValue::where('product_id', $productId)->get();
-
             $incomingVariantIds = collect($incomingVariants)->unique()->values();
-
             $incomingValueMap = collect();
 
             foreach ($incomingVariants as $i => $variantId) {
@@ -60,13 +49,12 @@ class ProductTabService
                 ]);
 
                 $incomingValueIds = collect($data['variant_values'][$i])->map(fn($v) => (int) $v)->unique()->values();
-
                 $incomingValueMap->push([
                     'variant_id' => $variantId,
                     'product_variant_id' => $variantModel->id,
                     'values' => $incomingValueIds
                 ]);
-
+          
                 foreach ($incomingValueIds as $valueId) {
                     $exists = $existingValues->firstWhere(function ($val) use ($variantModel, $valueId) {
                         return $val->product_variant_id == $variantModel->id && $val->variant_value_id == $valueId;
@@ -149,6 +137,123 @@ class ProductTabService
                 ->whereNotIn('combination_id', $newJsonCombos)
                 ->delete();
             });
+
+        return $product;
+    }
+
+    public function step2(array $data)
+    {
+        // $productId = $data['product_id'];
+
+        // \DB::transaction(function () use ($data, $productId) {
+
+        //     $incomingVariants = $data['variant'] ?? [];
+        //     $incomingVariantValues = $data['variant_values'] ?? [];
+
+        //     $existingVariants = ProductVariant::where('product_id', $productId)->get()->keyBy('variant_id');
+
+        //     $existingValues = ProductVariantValue::where('product_id', $productId)->get();
+
+        //     $incomingVariantIds = collect($incomingVariants)->unique()->values();
+
+        //     $incomingValueMap = collect();
+
+        //     foreach ($incomingVariants as $i => $variantId) {
+        //         $variantModel = $existingVariants[$variantId] ?? ProductVariant::create([
+        //             'product_id' => $productId,
+        //             'variant_id' => $variantId
+        //         ]);
+
+        //         $incomingValueIds = collect($data['variant_values'][$i])->map(fn($v) => (int) $v)->unique()->values();
+
+        //         $incomingValueMap->push([
+        //             'variant_id' => $variantId,
+        //             'product_variant_id' => $variantModel->id,
+        //             'values' => $incomingValueIds
+        //         ]);
+
+        //         foreach ($incomingValueIds as $valueId) {
+        //             $exists = $existingValues->firstWhere(function ($val) use ($variantModel, $valueId) {
+        //                 return $val->product_variant_id == $variantModel->id && $val->variant_value_id == $valueId;
+        //             });
+
+        //             if (!$exists) {
+        //                 ProductVariantValue::create([
+        //                     'product_variant_id' => $variantModel->id,
+        //                     'variant_value_id'   => $valueId,
+        //                     'product_id'         => $productId
+        //                 ]);
+        //             }
+        //         }
+        //     }
+
+        //     // Now delete ProductVariantValues not in new input
+        //     $validProductVariantIds = $incomingValueMap->pluck('product_variant_id')->toArray();
+        //     $validValueCombos = $incomingValueMap->flatMap(function ($row) {
+        //         return $row['values']->map(fn($v) => $row['product_variant_id'] . '|' . $v);
+        //     })->toArray();
+
+        //     foreach ($existingValues as $value) {
+        //         $key = $value->product_variant_id . '|' . $value->variant_value_id;
+        //         if (!in_array($key, $validValueCombos)) {
+        //             $value->delete();
+        //         }
+        //     }
+
+        //     // Delete variants not in new input
+        //     foreach ($existingVariants as $variantId => $variant) {
+        //         if (!$incomingVariantIds->contains($variantId)) {
+        //             $variant->delete();
+        //         }
+        //     }
+
+        //     // Generate combinations (same as before)
+        //     $variantValueMap = $data['variant_values'] ?? [];
+
+        //     $uniqueGroups = collect($variantValueMap)->unique(function ($item) {
+        //         return implode('_', $item);
+        //     })->values()->toArray();
+
+        //     $combinations = $this->cartesianProduct($uniqueGroups);
+
+        //     foreach ($combinations as $combo) {
+               
+        //       $valueIds = array_map('intval', $combo);
+              
+        //         $jsonCombo = json_encode($valueIds);   
+
+        //         $existing = ProductVariantCombination::where('product_id', $productId)
+        //         ->where('combination_id', $jsonCombo) 
+        //         ->first();
+
+        //         if ($existing) continue;
+                 
+        //         $values = collect($valueIds)
+        //             ->map(function ($id) {
+        //                 return \App\Models\VariantValue::find($id);
+        //             })
+        //             ->filter();
+
+        //             $name = $values->pluck('name')->implode(' ');
+        //             $sku  = strtolower($values->pluck('name')->implode('_'));
+
+        //             ProductVariantCombination::create([
+        //                 'product_id'     => $productId,
+        //                 'sku'            => $sku,
+        //                 'combination_id' => json_encode($valueIds),
+        //                 'name'           => $name,
+        //                 'selling_price'  => 0.0,
+        //                 'price'          => 0.0,
+        //                 'qty'            => 0,
+        //             ]);
+        //     }
+
+        //     $newJsonCombos = collect($combinations)->map(fn($combo) => json_encode(array_map('intval', $combo)))->toArray();
+
+        //     ProductVariantCombination::where('product_id', $productId)
+        //         ->whereNotIn('combination_id', $newJsonCombos)
+        //         ->delete();
+        //     });
     }
 
     private function cartesianProduct($arrays)
@@ -168,6 +273,7 @@ class ProductTabService
 
     public function step3(array $data): Product
     {
+        info("-------------product data------------",[$data]); 
         return DB::transaction(function () use ($data) {
             $productTags = is_array($data['product_tags'] ?? null)
                 ? implode(',', $data['product_tags']) : ($data['product_tags'] ?? '');
@@ -249,7 +355,6 @@ class ProductTabService
                 'updated_by' => Auth::user()->id
             ];
 
-            // Product Detail dynamic field Save
             $i = 1;
             $j = 0;
             foreach($data['content'] ?? [] as $sectionId){
@@ -267,9 +372,37 @@ class ProductTabService
             }
             $this->handleAttributes($product, $data);
             $this->handleGraphics($product, $data);
-
+            $this->handleProductSpecification($product, $data); 
             return $product;
         });
+    }
+
+    protected function handleProductSpecification(Product $product, array $data){
+
+        foreach ($data['variant_id'] ?? [] as $value) {
+            $variantId = VariantValue::where('id', $value)->value('variant_id');
+            $contentKey = 'content_' . $value;
+            $contentValue = $data['content_specification_' . $value] ?? '';
+
+            $exist = ProductVariantSpecialization::where('product_id', $product->id)
+                ->where('variant_id', $variantId)
+                ->where('variant_value_id', $value)
+                ->first();
+
+            if ($exist) {
+                $exist->update([
+                    $contentKey => $contentValue,
+                ]);
+
+            } else {
+                ProductVariantSpecialization::create([
+                    'product_id'       => $product->id,
+                    'variant_id'       => $variantId,
+                    'variant_value_id' => $value,
+                    $contentKey        => $contentValue,
+                ]);
+            }
+        }
     }
 
     protected function handleWithoutVariants(Product $product, array $data)
@@ -314,39 +447,40 @@ class ProductTabService
     protected function handleVariants(Product $product, array $data)
     {
         ProductVariantValue::where('product_id', $product->id)->update(['is_main' => 0]);
+        
+        $getVariantValue =ProductVariantValue::where('product_id', $product->id)->first(); 
 
-        // Set selected main variant
         if (!empty($data['main_variant'])) {
             ProductVariantValue::where('product_id', $product->id)
                 ->where('variant_value_id', $data['main_variant'])
                 ->update(['is_main' => 1]);
         }
 
+        $record =  ProductVariant::where('product_id',$product->id)->first();
+
+        foreach($data['variant_id'] as $value){
+            if($getVariantValue->variant_value_id == $value){
+                ProductVariantValue::where('product_id',$product->id)->where('variant_value_id',$value)->update([
+                'is_main'=>1
+                ]);
+            }
+        }
         $submittedCombinations = [];
 
         $totalCombinations = count($data['variant_name'] ?? []);
         for ($i = 0; $i < $totalCombinations; $i++) {
             $product_sku = strtolower(str_replace(' ', '', $data['sku']));
             $varient_sku = strtolower(str_replace(' ', '', $data['variant_sku'][$i]));
-            $varient_sku = strtolower(str_replace(strtolower($data['sku']).'_', '', $varient_sku));
-            // $sku         = $product_sku.'_'.$varient_sku;
-            $sku            =  $varient_sku;
+            $varient_sku = strtolower(str_replace($data['sku'].'_', '', $varient_sku));
+            $sku         = $product_sku.'_'.$varient_sku;
             
             $combo       = $data['combo'][$i] ?? '';
-            // if($data['main_variant']==$combo){
-            //     $main_variant = $data['main_variant'];
-            // } else{
-            //     $main_variant = null;
-            // } 
-            $main_variant   = $data['main_variant'];
-            
-            $price          = $data['variant_price'][$i] ?? 0;
-            $salePrice      = $data['variant_sale_price'][$i] ?? $price;
-            $qty            = $data['variant_qty'][$i] ?? 0;
-            $discount       = $data['variant_discount'][$i] ?? null;
-            $discountType   = $data['variant_discount_type'][$i] ?? null;
-            $specialization = $data['specialization'][$i] ?? null;
-            
+            $price       = $data['variant_price'][$i] ?? 0;
+            $salePrice   = $data['variant_sale_price'][$i] ?? $price;
+            $qty         = $data['variant_qty'][$i] ?? 0;
+            $discount    = $data['variant_discount'][$i] ?? null;
+            $discountType = $data['variant_discount_type'][$i] ?? null;
+
             $valueIds = array_map('intval', explode('_', $combo));
             $encodedCombo = json_encode($valueIds);
             $submittedCombinations[] = $encodedCombo;
@@ -357,15 +491,14 @@ class ProductTabService
                 ->first();
 
             if ($existing) {
+               
                 $existing->update([
                     'sku'           => $sku,
-                    'primary_variant_value_id' => $main_variant ?? null,
                     'selling_price' => $salePrice,
                     'price'         => $price,
                     'qty'           => $qty,
                     'discount'      => $discount,
                     'discount_type' => $discountType,
-                    'specialization' => $specialization,
                     'status'        => "1"
                 ]);
             } else {
@@ -373,20 +506,17 @@ class ProductTabService
                 ProductVariantCombination::create([
                     'product_id'     => $product->id,
                     'sku'            => $sku,
-                    'primary_variant_value_id' => $main_variant ?? null,
                     'combination_id' => $encodedCombo,
                     'selling_price'  => $salePrice,
                     'price'          => $price,
                     'qty'            => $qty,
                     'discount'       => $discount,
                     'discount_type'  => $discountType,
-                    'specialization' => $specialization,
                     'status'         => "1"
                 ]);
             }
         }
 
-        // Deactivate old combinations not present in current form
         ProductVariantCombination::where('product_id', $product->id)
             ->whereNotIn('combination_id', $submittedCombinations)
             ->update(['status' => "0"]);
@@ -418,30 +548,95 @@ class ProductTabService
         $imagePath = config('constant.PRODUCT_IMAGE_ROOT_PATH').$folder_path;
 
         foreach ($data['variant_images'] ?? [] as $primaryId => $files) {
-            ProductGraphics::where('variant_id', $primaryId)->where('product_id', $product->id)->update(['is_front' => 0,'is_back' => 0,'is_variant_icon' => 0 ]);
+            info("------primary_id-------",[$primaryId]); 
+            ProductGraphics::where('variant_id', $primaryId)
+                ->where('product_id', $product->id)
+                ->update([
+                    'is_front'        => 0,
+                    'is_back'         => 0,
+                    'is_variant_icon' => 0
+                ]);
 
             foreach ($files as $index => $file) {
+
                 if (!$file || !$file->isValid()) {
                     continue;
                 }
 
-                $name = uniqid("variant_{$primaryId}_") . '.' . $file->getClientOriginalExtension();
-                // Ensure directory exists
+                $name = uniqid("variant_{$primaryId}_") . '.webp';
+
                 if (!file_exists($imagePath)) {
                     mkdir($imagePath, 0755, true);
                 }
-                $file->move($imagePath, $name);
 
+                $sourcePath = $file->getPathname();
+                $extension = strtolower($file->getClientOriginalExtension());
+
+                switch ($extension) {
+
+                    case 'jpg':
+                    case 'jpeg':
+                        $sourceImage = imagecreatefromjpeg($sourcePath);
+                        break;
+
+                    case 'png':
+                        $sourceImage = imagecreatefrompng($sourcePath);
+
+                        // Preserve transparency
+                        imagepalettetotruecolor($sourceImage);
+                        imagealphablending($sourceImage, false);
+                        imagesavealpha($sourceImage, true);
+                        break;
+
+                    case 'gif':
+                        $sourceImage = imagecreatefromgif($sourcePath);
+
+                        // Preserve transparency
+                        imagepalettetotruecolor($sourceImage);
+                        imagealphablending($sourceImage, false);
+                        imagesavealpha($sourceImage, true);
+                        break;
+
+                    case 'webp':
+                        $sourceImage = imagecreatefromwebp($sourcePath);
+                        break;
+
+                    default:
+                        continue 2;
+                }
+
+                if (!$sourceImage) {
+                    continue;
+                }
+
+                // Convert and save as WebP
+                imagewebp(
+                    $sourceImage,
+                    $imagePath . DIRECTORY_SEPARATOR . $name,
+                    85
+                );
+
+                // Free memory
+                imagedestroy($sourceImage);
                 ProductGraphics::create([
-                    'product_id'   => $product->id,
-                    'variant_id'   => $primaryId, // IN case of simple product product id = varient id
-                    'product_type' => 'variant_group',
-                    'graphic_type' => "image",
-                    'graphic'      => $folder_path.$name,
-                    'status'       => 1,
-                    'is_front'     => isset($data['front_image'][$primaryId]) && $data['front_image'][$primaryId] == "{$primaryId}-{$index}" ? 1 : 0,
-                    'is_back'      => isset($data['back_image'][$primaryId]) && $data['back_image'][$primaryId] == "{$primaryId}-{$index}" ? 1 : 0,
-                    'is_variant_icon' => isset($data['variant_icon'][$primaryId]) && $data['variant_icon'][$primaryId] == "{$primaryId}-{$index}" ? 1 : 0,
+                    'product_id'       => $product->id,
+                    'variant_id'       => $primaryId,
+                    'product_type'     => 'variant_group',
+                    'graphic_type'     => 'image',
+                    'graphic'          => $folder_path . $name,
+                    'status'           => 1,
+
+                    'is_front' => isset($data['front_image'][$primaryId])
+                        && $data['front_image'][$primaryId] == "{$primaryId}-{$index}"
+                        ? 1 : 0,
+
+                    'is_back' => isset($data['back_image'][$primaryId])
+                        && $data['back_image'][$primaryId] == "{$primaryId}-{$index}"
+                        ? 1 : 0,
+
+                    'is_variant_icon' => isset($data['variant_icon'][$primaryId])
+                        && $data['variant_icon'][$primaryId] == "{$primaryId}-{$index}"
+                        ? 1 : 0,
                 ]);
             }
         }

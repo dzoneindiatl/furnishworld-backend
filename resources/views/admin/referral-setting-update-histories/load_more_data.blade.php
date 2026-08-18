@@ -2,7 +2,7 @@
 @php $i = $offset +1;	 @endphp
 @forelse($results as $result)
 <tr class="list-data-row" data-total-count="{{$totalResults}}">
-	<td>{{ $i++; }}</td>
+	<td>{{ $i++ }}</td>
     <td>
         @if (!empty($result->receiver_amount))
         {{isset($result->receiver_amount)? $result->receiver_amount:''}}

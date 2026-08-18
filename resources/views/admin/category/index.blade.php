@@ -184,6 +184,7 @@
                             <th>Image</th>
                             <th class="sortable" data-column="name">Name <i class="sort-icon ri-sort-asc"></i></th>
                             <th class="sortable" data-column="name">Category Type<i class="sort-icon ri-sort-asc"></i></th>
+                            <th class="sortable" data-column="is_featured">Featured <i class="sort-icon ri-sort-asc"></i> </th>
                             <th class="sortable" data-column="name">Show On Menu<i class="sort-icon ri-sort-asc"></i></th>
                             <th class="sortable" data-column="show_on_menu">Show On Home<i class="sort-icon ri-sort-asc"></i></th>
                             <th class="sortable" data-column="created_at">Created At <i class="sort-icon ri-sort-asc"></i>
@@ -240,6 +241,7 @@
 
 @push('scripts')
     <!-- Datatables Cdn -->
+   
     <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.3.0/js/dataTables.responsive.min.js"></script>
@@ -255,7 +257,7 @@
         var routeName = '{{ route($listRouteName) }}';
     </script>
     <script src="{{ asset('assets/js/datatables.js') }}"></script>
-
+    
     <script src="{{ asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
     <script src="{{ asset('assets/js/sweet-alerts.js') }}"></script>
 

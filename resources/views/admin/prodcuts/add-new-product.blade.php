@@ -30,39 +30,19 @@
 
         <input type="hidden" value="" name="draf" id="draf">
        
-        <ul class="nav nav-tabs mb-4" id="formTabs">
-            <li class="nav-item category-tab">
-                <a class="nav-link active" data-tab="tab1" id="step1" href="javascript:void(0)" onclick="onclickPrevious('step1')">Select Category</a>
+         <ul class="nav nav-tabs mb-4" id="formTabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-tab="tab1" href="javascript:void(0)">Basic Details</a>
             </li>
-            @php
-            $hideClass='';
-            if(@$product->product_type==1){
-                $hideClass = 'style="display:none"';
-            }
-            @endphp
-            <li class="nav-item variant-tab" <?php echo $hideClass; ?> >
-                <?php if(isset($product->id) && !empty($product->id)) { ?>
-                <a class="nav-link" data-tab="tab2" id="step2" href="javascript:void(0)" onclick="onclickPrevious('step2')">Select Variant</a>
-                <?php } else { ?>
-                <a class="nav-link" data-tab="tab2" id="step2" href="javascript:void(0)">Select Variant</a>
-                <?php } ?>
+            <li class="nav-item">
+                <a class="nav-link" data-tab="tab2" href="javascript:void(0)">Advance Details</a>
             </li>
-            
-            <li class="nav-item feature-tab">
-                <?php if(isset($product->id) && !empty($product->id)) { ?>
-                <a class="nav-link" data-tab="tab3" id="step3" href="javascript:void(0)" onclick="onclickPrevious('step3')">Advance Feature</a>
-                <?php } else { ?>
-                <a class="nav-link" data-tab="tab3" id="step3" href="javascript:void(0)">Advance Feature</a>
-                <?php } ?>
-
-            </li>
-            <li class="nav-item seo-tab">
-                <?php if(isset($product->id) && !empty($product->id)) { ?>
-                <a class="nav-link" data-tab="tab4" id="step4" href="javascript:void(0)" onclick="onclickPrevious('step4')">SEO Feature</a>
-                <?php } else { ?>
-                <a class="nav-link" data-tab="tab4" id="step4" href="javascript:void(0)">SEO Feature</a>
-                <?php } ?>
-            </li>
+            {{-- <li class="nav-item">
+                <a class="nav-link" data-tab="tab3" href="javascript:void(0)">Advance Details</a>
+            </li> --}}
+            {{-- <li class="nav-item">
+                <a class="nav-link" data-tab="tab4" href="javascript:void(0)">SEO Feature</a>
+            </li> --}}
         </ul>
         <div class="tab-content">
             <div class="tab-pane active" id="tab1">
@@ -70,10 +50,10 @@
             </div>
             <div class="tab-pane" id="tab2">
             </div>
-            <div class="tab-pane" id="tab3">
+            {{-- <div class="tab-pane" id="tab3">
             </div>
             <div class="tab-pane" id="tab4">
-            </div>
+            </div> --}}
         </div>
     </form>
 </div>
@@ -99,17 +79,24 @@ $form.validate({
     }
 });
 
-$(".nextBtn").click(function() {
+$(".nextBtn").click(function(e) {
+    e.preventDefault(); 
     let $currentTab = $(this).closest(".tab-pane");
+    console.log("CURRENT TAB:", $currentTab.attr("id"));
     let $fields = $currentTab.find("input, select, textarea");
-
+    let $nextTab = $currentTab.next(".tab-pane");
+    console.log("NEXT TAB:", $nextTab.attr("id"));
     let valid = true;
-    $fields.each(function() {
-        if (!$(this).valid()) {
-            valid = false;
-        }
-    });
+    // $fields.each(function() {
+    //     if (!$(this).valid()) {
+    //         valid = false;
+    //     }
+    // });
+    $(".tab-pane").removeClass("active");
+    $nextTab.addClass("active");
 
+    $(".nav-link").removeClass("active");
+    $('.nav-link[data-tab="' + $nextTab.attr("id") + '"]').addClass("active");
     if (valid) {
         let currentTabId = $currentTab.attr("id");
         let nextTab = $currentTab.next(".tab-pane").attr("id");
@@ -137,64 +124,64 @@ function switchTab(targetId) {
     $('.nav-link[data-tab="' + targetId + '"]').addClass("active");
 }
 
-$(document).on('change', '.product_type_selectbox', function() {
-    var product_type = $(this).val();
-    if(product_type==1){
-        $('.variant-tab').hide();
-    } else {
-        $('.variant-tab').show();
-    }
-});
+// $(document).on('change', '.product_type_selectbox', function() {
+//     var product_type = $(this).val();
+//     if(product_type==1){
+//         $('.variant-tab').hide();
+//     } else {
+//         $('.variant-tab').show();
+//     }
+// });
 
-function onclickPrevious(value) {
-    const $btn = $('.prevBtn');
-    const originalHtml = $btn.html();
-    const formData = new FormData();
-    formData.append('product_id', $('#product_id').val());
-    formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
-    formData.append('step', value);  
-    $.ajax({
-        url: "{{ route('admin-product-previousStep') }}",
-        type: "POST",
-        data: formData,
-        contentType: false,
-        processData: false,
-        beforeSend: function () {
-            $btn.prop('disabled', true).html(`
-                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                Processing...
-            `);
-        },
-        success: res => {
-            if (res.success) {
-                if (res.success && res.step==1) {
-                    $('#tab1').html(res.mainView);
-                } else if (res.success && res.step==2) {
-                    $('#tab2').html(res.varient);
-                } else if (res.success && res.step==3) {
-                    $('#tab3').html(res.mainView);
-                } else if (res.success && res.step==4) {
-                    $('#tab4').html(res.seoView);
-                } else {
-                    alert(res.message || "Something went wrong");
-                }
-            } else {
-                alert(res.message || 'Something went wrong.');
-            }
+// function onclickPrevious(value) {
+//     const $btn = $('.prevBtn');
+//     const originalHtml = $btn.html();
+//     const formData = new FormData();
+//     formData.append('product_id', $('#product_id').val());
+//     formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+//     formData.append('step', value);  
+//     $.ajax({
+//         url: "{{ route('admin-product-previousStep') }}",
+//         type: "POST",
+//         data: formData,
+//         contentType: false,
+//         processData: false,
+//         beforeSend: function () {
+//             $btn.prop('disabled', true).html(`
+//                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+//                 Processing...
+//             `);
+//         },
+//         success: res => {
+//             if (res.success) {
+//                 if (res.success && res.step==1) {
+//                     $('#tab1').html(res.mainView);
+//                 } else if (res.success && res.step==2) {
+//                     $('#tab2').html(res.varient);
+//                 } else if (res.success && res.step==3) {
+//                     $('#tab3').html(res.mainView);
+//                 } else if (res.success && res.step==4) {
+//                     $('#tab4').html(res.seoView);
+//                 } else {
+//                     alert(res.message || "Something went wrong");
+//                 }
+//             } else {
+//                 alert(res.message || 'Something went wrong.');
+//             }
 
 
-        },
-        error: xhr => {
-            const msg = xhr.status === 422
-                ? Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n')
-                : 'Server error';
-            alert(msg);
-        },
+//         },
+//         error: xhr => {
+//             const msg = xhr.status === 422
+//                 ? Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n')
+//                 : 'Server error';
+//             alert(msg);
+//         },
 
-        complete: function () {
-            $btn.prop('disabled', false).html(originalHtml);
-        }
-    });
-}
+//         complete: function () {
+//             $btn.prop('disabled', false).html(originalHtml);
+//         }
+//     });
+// }
 </script>
 @endpush

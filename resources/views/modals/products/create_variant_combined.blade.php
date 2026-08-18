@@ -1,5 +1,5 @@
 <input type="hidden" name="product_id" id="product_id" value="{{ $product_id ?? '' }}">
-<div id="step2" <?php if(@$product_type==1){ echo "style='display:none'"; } ?> >
+<div id="step2">
     <div id="variantContainer">
         @if(count($selectedVariants) > 0)
             @foreach($selectedVariants as $i => $data)
@@ -61,10 +61,10 @@
         <button type="button" class="btn btn-success" id="addVariant">+ Add Variant</button>
     </div>
 
-    <div class="mb-3 text-end btn_add_new">
-        <button type="button" class="btn btn-primary prevBtn" onclick="onclickPrevious('step1')">Preview</button>
+    {{-- <div class="mb-3 text-end btn_add_new">
+        <button type="button" class="btn btn-primary prevBtn" onclick="onclickPrevious('step1')">Previous</button>
         <button type="button" class="btn btn-primary nextBtn" onclick="submitProductStep2()">Save & Continue</button>
-    </div>
+    </div> --}}
 </div>
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -77,16 +77,16 @@
     
 $(function () {
     // Skipped step 2 case of simple product
-    if(product_type==1){
-        $('.nextBtn').trigger('click');
-    }
+    // if(product_type==1){
+    //     $('.nextBtn').trigger('click');
+    // }
 
-    // Active step 2 linktab &  stepdiv 
-    $(".tab-pane").removeClass("active");
-    $("#tab2").addClass("active");
+    // // Active step 2 linktab &  stepdiv 
+    // $(".tab-pane").removeClass("active");
+    // $("#tab2").addClass("active");
 
-    $(".nav-link").removeClass("active");
-    $('#step2').addClass("active");
+    // $(".nav-link").removeClass("active");
+    // $('#step2').addClass("active");
 
 
     // **FIX 4: Initialize index based on how many variants are already on the page.**
@@ -258,82 +258,75 @@ function submitProductStep2() {
         },
         success: res => {
             if (res.success) {
-                if (res.success && res.step==2) {
-                    $('#tab2').html(res.varient);
-                } else if (res.success && res.step==3) {
-                    $('#tab3').html(res.mainView);
-                } else if (res.success && res.step==4) {
-                    $('#tab4').html(res.seoView);
-                } else {
-                    alert(res.message || "Something went wrong");
-                }
+                $('#tab2').html("");
+                $('#formTabs .nav-link').removeClass('active');
+                $('#formTabs .nav-link[data-tab="tab3"]').addClass('active');
+                $('#tab2').html("").html(res.mainView);
 
             } else {
                 alert(res.message || 'Something went wrong.');
             }
 
-            $btn.prop('disabled', false).html(originalHtml);
+
         },
         error: xhr => {
             const msg = xhr.status === 422
                 ? Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n')
                 : 'Server error';
             alert(msg);
-            $btn.prop('disabled', false).html(originalHtml);
         },
         complete: function () {
             $btn.prop('disabled', false).html(originalHtml);
         }
-        // $btn.prop('disabled', false).html(originalHtml);
     });
 }
 
-// function onclickPrevious(value) {
-//     const $btn = $('.prevBtn');
-//     const originalHtml = $btn.html();
-//     const formData = new FormData();
-//     formData.append('product_id', $('#product_id').val());
-//     formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
-//     formData.append('step', "step1");
-//     $.ajax({
-//         url: "{{ route('admin-product-previousStep') }}",
-//         type: "POST",
-//         data: formData,
-//         contentType: false,
-//         processData: false,
-//         beforeSend: function () {
-//             $btn.prop('disabled', true).html(`
-//                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-//                 Processing...
-//             `);
-//         },
-//         success: res => {
-//             if (res.success) {
-//                 $('#tab2 script').remove();
-//                 $('#formTabs .nav-link').removeClass('active');
-//                 $('#formTabs .nav-link[data-tab="tab1"]').addClass('active');
-//                 $('#tab1').html("");
-//                 $('#tab2').html("").html(res.mainView);
+function onclickPrevious(value) {
+    const $btn = $('.prevBtn');
+    const originalHtml = $btn.html();
+    const formData = new FormData();
+    formData.append('product_id', $('#product_id').val());
+    formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+    formData.append('step', "step1");
+    $.ajax({
+        url: "{{ route('admin-product-previousStep') }}",
+        type: "POST",
+        data: formData,
+        contentType: false,
+        processData: false,
+        beforeSend: function () {
+            $btn.prop('disabled', true).html(`
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Processing...
+            `);
+        },
+        success: res => {
+            if (res.success) {
+                $('#tab2 script').remove();
+                $('#formTabs .nav-link').removeClass('active');
+                $('#formTabs .nav-link[data-tab="tab1"]').addClass('active');
+                $('#tab1').html("");
+                $('#tab2').html("").html(res.mainView);
                
 
-//             } else {
-//                 alert(res.message || 'Something went wrong.');
-//             }
+            } else {
+                alert(res.message || 'Something went wrong.');
+            }
 
 
-//         },
-//         error: xhr => {
-//             const msg = xhr.status === 422
-//                 ? Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n')
-//                 : 'Server error';
-//             alert(msg);
-//         },
+        },
+        error: xhr => {
+            const msg = xhr.status === 422
+                ? Object.values(xhr.responseJSON.errors).map(e => e[0]).join('\n')
+                : 'Server error';
+            alert(msg);
+        },
 
-//         complete: function () {
-//             $btn.prop('disabled', false).html(originalHtml);
-//         }
-//     });
-// }
+        complete: function () {
+            $btn.prop('disabled', false).html(originalHtml);
+        }
+    });
+}
 
 
 </script>

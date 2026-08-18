@@ -1,18 +1,23 @@
 @foreach ($groupedCombinations as $primaryId => $combos)
     @php
-        $primaryValue = \App\Models\VariantValue::find($primaryId);
-         $mainVariantValueId = \App\Models\ProductVariantValue::where('product_id', $product_id)
-        ->where('is_main', '1')
-        ->value('variant_value_id');
+        $primaryValue = $primaryValueData[$primaryId] ?? null;
+        $images = $graphics[$primaryId . '_image'] ?? collect();
+        $videos = $graphics[$primaryId . '_video'] ?? collect();
+        $variantCombinationOutOfStock =
+            $outOfStockCombinations
+                ->filter(function ($combination) use ($primaryId) {
 
-        $images = \App\Models\ProductGraphics::where('product_id', $product_id)->where('variant_id',$primaryId)->where('graphic_type','image')->get();
-        $videos = \App\Models\ProductGraphics::where('product_id', $product_id)->where('variant_id',$primaryId)->where('graphic_type','video')->get();
-        $imagePath = config('constant.PRODUCT_IMAGE_PATH'); 
-       
-        $variantCombinationOutOfStock = \App\Models\ProductVariantCombination::where('product_id', $product_id)
-            ->whereJsonContains('combination_id',  (int) $primaryId)->where('is_out_of_stock', 1)
-            ->count();
-        
+                    $ids = json_decode(
+                        $combination->combination_id,
+                        true
+                    );
+
+                    return in_array(
+                        (int) $primaryId,
+                        array_map('intval', $ids ?? [])
+                    );
+                })
+                ->count();
     @endphp
     <div class="card mb-4 shadow-sm variant_group_row" id="variant_{{ $primaryId }}">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -32,15 +37,13 @@
                     <i class="ri-add-line"></i>
                 </button>
             </div>
-            <!-- Out of Stock Toggle -->
             <div class="" data-bs-toggle="collapse" href="#collapseExample_{{ $primaryId }}" role="button" aria-expanded="false" aria-controls="collapseExample_{{ $primaryId }}">
                 <div class="form-check form-switch specialization-toggle">
                     <input class="form-check-input specialization-toggle"
                         type="checkbox"
                         data-variant-id="{{ $primaryId }}"
                         data-product-id="{{ $product_id }}"
-                        id="specialization_toggle_{{ $primaryId }}"
-                        checked >     
+                        id="specialization_toggle_{{ $primaryId }}" checked>     
                     <label class="form-check-label" for="specialization_toggle_{{ $primaryId }}">
                         Specification
                     </label>
@@ -191,18 +194,18 @@
                         @foreach ($combos as $combo)
                             @php
                                 $ids = explode('_', $combo);
+                                info("blade----ids-----",[$ids]);
                                 $variantValues = \App\Models\VariantValue::whereIn('id', $ids)->get()->keyBy('id');
+                                info('blade---variantvalues-----',[$variantValues]); 
                                 $names = collect($ids)->map(fn($id) => $variantValues[$id]->name ?? '')->toArray();
+                                info("blade---name----",$names); 
                                 $variantName = implode(' ', $names);
+                                    info("------variantName----",[$variantName]); 
                                 $variantSKU = strtolower(implode('_', $names));
-                                
-                                
                                 $valueIds = array_map('intval', $ids);
                                 $savedCombo = \App\Models\ProductVariantCombination::where('product_id', $product_id)
                                     ->where('combination_id',json_encode($valueIds))
                                     ->first();
-
-                                $product = \App\Models\Product::where('id',$product_id)->first();
 
                             @endphp
 
@@ -227,7 +230,6 @@
 
                                 <td>
                                     <div class="input-group">
-                                        <!-- <span class="input-group-text dynamic-sku-prefix">{{$product->sku ?? 'SKU_'}}</span> -->
                                         <input 
                                             type="text" 
                                             name="variant_sku[]" 
@@ -235,13 +237,11 @@
                                             value="{{ $savedCombo->sku ?? strtolower($variantSKU) }}">
                                     </div>
                                 </td>
-
                                 <td>
                                     <input type="number" min="0" name="variant_price[]" 
                                         value="{{ $savedCombo->price ?? '' }}" 
                                         class="v_input_price form-control" placeholder="Price">
                                 </td>
-
                                 <td>
                                     <select name="variant_discount_type[]" class="discount_type_popup form-control">
                                         <option value="" {{ ($savedCombo->discount_type ?? '') === '' ? 'selected' : '' }}>None</option>
@@ -274,16 +274,23 @@
                                     </a>
                                 </td>
                             </tr>
-
-
                         @endforeach
                     </tbody>
                 </table>
             </div>
+            {{ info('------------blade-------primaryId----------',[$primaryId]) }}
             <div  id="collapseExample_{{ $primaryId }}">
                 <div class="card card-body">
                     <label for="specialization_{{ $primaryId }}" class="form-label fw-semibold">Specification</label>
-                    <textarea class="form-control ck_content" name="specialization[]" id="specialization_{{ $primaryId }}" rows="4"><?php echo $savedCombo->specialization; ?></textarea>
+                    @if(!empty($productVariantSpecification) && count($productVariantSpecification) > 0)
+                        @foreach($productVariantSpecification as $vl)
+                            @if($vl->variant_value_id == $primaryId)
+                                <textarea class="form-control ck_content" name="content_specification_{{ $primaryId }}" id="specialization_{{ $primaryId }}" rows="4">{!! $vl->{'content_' . $primaryId} ?? '' !!}</textarea>
+                            @endif
+                        @endforeach
+                    @else 
+                        <textarea class="form-control ck_content" name="content_specification_{{ $primaryId }}" id="specialization_{{ $primaryId }}" rows="4"></textarea>   
+                    @endif          
                 </div>
             </div>
         </div>
@@ -310,7 +317,7 @@
 </div>
 
 
-<div style="display: none;">
+{{-- <div style="display: none;">
     @foreach ($groupedDeleted as $primaryId => $combinations)
         <table>
             <tbody id="restore_pool_{{ $primaryId }}">
@@ -360,7 +367,7 @@
             </tbody>
         </table>
     @endforeach
-</div>
+</div> --}}
 
 
 <script>

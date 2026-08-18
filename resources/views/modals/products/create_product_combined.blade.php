@@ -41,14 +41,14 @@
                             </option>
                         @endforeach
                     </optgroup>
-                    <optgroup label="Collection">
+                    {{-- <optgroup label="Collection">
                         @foreach ($collections as $collection)
                             <option value="{{ $collection['id'] }}"
                                 {{ old('main_category_id', $product->main_category_id ?? '') == $collection['id'] ? 'selected' : '' }}>
                                 {{ $collection['name'] }}
                             </option>
                         @endforeach
-                    </optgroup>
+                    </optgroup> --}}
                 </select>
                 @error('main_category_id')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -68,10 +68,68 @@
             <div class="mb-3 childCategoryHide d-none">
                 <label class="form-label">Child Category <span class="text-danger">*</span></label>
                 <select name="main_child_cate_id" id="prdct_child_category_id"
-                        class="form-control select2">
+                        class="form-control select2" onchange="getVariantData()">
                     <option value="">Select Child Category</option>
                 </select>
             </div>
+            <div id="variantContainer"></div>
+            {{-- <div id="variantContainer">
+                @if(count($selectedVariants) > 0)
+                    @foreach($selectedVariants as $i => $data)
+                        <div class="variant-card card p-3 mb-3 shadow-sm">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">Select Variant</label>
+                                    <select class="form-control variantSelect" name="variant[]">
+                                        <option value="">Select Variant</option>
+                                        @foreach($variantsData as $variant)
+                                            <option {{ $data['variant_id'] == $variant->id ? 'selected' : '' }} value="{{ $variant->id }}">{{ $variant->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="form-label">Variant Values</label>
+                                    <select name="variant_values[{{ $i }}][]" 
+                                            class="form-control variantValuesSelect product_select2" 
+                                            multiple 
+                                            data-selected-values='@json($data['variant_values'])'>
+                                        <option value="">Select Variant Value</option>
+                                    </select>
+                                </div>
+                                @if($i > 0)
+                                    <div class="col-md-1 d-flex align-items-end" >
+                                        <button type="button" class="btn btn-danger removeVariant">✕</button>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                @else 
+                    <div class="variant-card card p-3 mb-3 shadow-sm">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="form-label">Select Variant</label>
+                                <select class="form-control variantSelect" name="variant[]">
+                                    <option value="">Select Variant</option>
+                                    @foreach($variantsData as $variant)
+                                        <option value="{{ $variant->id }}">{{ $variant->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label">Variant Values</label>
+                                <select name="variant_values[0][]" class="form-control variantValuesSelect product_select2" multiple>
+                                    <option value="">Select Variant Value</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="mb-3 add-more-variant">
+                <button type="button" class="btn btn-success" id="addVariant">+ Add Variant</button>
+            </div> --}}
 
             <div class="mb-3 text-end">
                 <button type="button" class="btn btn-primary nextBtn" id="nextBtn" onclick="submitProduct()">
@@ -100,12 +158,12 @@
 {{-- Safe JS block --}}
 <script>
 (function () {
-    // Active step 1 linktab &  stepdiv 
-    $(".tab-pane").removeClass("active");
-    $("#tab1").addClass("active");
+    // // Active step 1 linktab &  stepdiv 
+    // $(".tab-pane").removeClass("active");
+    // $("#tab1").addClass("active");
 
-    $(".nav-link").removeClass("active");
-    $('#step1').addClass("active");
+    // $(".nav-link").removeClass("active");
+    // $('#step1').addClass("active");
 
     // Guard against redeclaration
     window.selectorsData = window.selectorsData || {
@@ -203,7 +261,6 @@
 
     window.loadChildCategories = function() {
         const subCatId = $(selectorsData.sub).val();
-
         ajaxCall("{{ route('admin-product-ajax-getchildcategory') }}", { subctgids: subCatId }, res => {
             console.log((res.childcat));
             if (res.success && res.childcat.length) {
@@ -212,31 +269,77 @@
             } else {
                 $('.childCategoryHide').addClass('d-none');
                 populateSelect(selectorsData.child, [], "Child Category");
+                getVariantData();
             }
         });
     }
 
-    window.submitProduct = function() {
-        const $btn = $('.nextBtn');
-        const originalHtml = $btn.html();
-
+    window.getVariantData = function() {
+        var subchildCategory = $('#prdct_child_category_id').val();
+        var productType = $('#product_type').val(); 
+        const $btn = $('.nextBtn'); 
+        const originalHtml = $btn.html(); 
         const formData = {
-            _token: '{{ csrf_token() }}',
+             _token: '{{ csrf_token() }}',
             product_type: $('#product_type').val(),
             main_category_id: $('#prdct_category_id').val(),
             main_sub_category_id: $('#prdct_sub_category_id').val(),
-            main_child_cate_id: $('#prdct_child_category_id').val(),
-        };
-
+            main_child_cate_id : subchildCategory
+        }; 
         const productId = $('#product_id').val();
         if (productId) {
             formData.product_id = productId;
         }
 
+        if(productType == 2){
+            $.ajax({
+                url:'{{ route("admin-product-get-variant-record") }}', 
+                method:"POST", 
+                dataType:'json',
+                data:formData, 
+                success:function(response){
+                    console.log(response); 
+                    if(response.success){
+                         $('#variantContainer').html(response.html); 
+                    }
+                },
+                error:function(err){
+                    console.log(err); 
+                }
+            }); 
+        }
+    }
+    
+    window.submitProduct = function() {
+        const $btn = $('.nextBtn');
+        const originalHtml = $btn.html(); 
+        const formData = new FormData();
+
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('product_type', $('#product_type').val());
+        formData.append('main_category_id', $('#prdct_category_id').val());
+        formData.append('main_sub_category_id', $('#prdct_sub_category_id').val());
+        formData.append('main_child_cate_id', $('#prdct_child_category_id').val());
+        var variantSelected = false;
+        $('.variant-card').each((i, el) => {
+            const variantId = $(el).find('.variantSelect').val();
+            const values = $(el).find('.variantValuesSelect').val() || [];
+            if (variantId) {  
+                variantSelected = true;          
+                formData.append(`variant[${i}]`, variantId);
+                values.forEach(v => formData.append(`variant_values[${i}][]`, v));
+            }
+        });
+        const productId = $('#product_id').val();
+        if (productId) {
+            formData.append('product_id',productId); 
+        }
         $.ajax({
             url: '{{ route("admin-product-save.step1") }}',
             method: 'POST',
             data: formData,
+            processData: false,
+            contentType: false,
 
             // 🔽 BEFORE AJAX SEND
             beforeSend: function () {
@@ -247,39 +350,12 @@
             },
 
             // 🔽 ON SUCCESS
-            success: function (res) {
-                $btn.prop('disabled', false).html(originalHtml);
-                if (res.success==true && res.step==2) { 
-                    $('.nav-link').removeClass('active');
-                    $("#step2").addClass("active");
-
-                    $('.tab-pane').removeClass('active');
-                    $('#tab2').addClass('active');
-
+            success: function (res) { 
+                console.log(res); 
+                if (res.success) {
                     $('#tab2').html(res.varient);
-                } else if (res.success==true && res.step==3) { 
-                    $('.nav-link').removeClass('active');
-                    $("#step3").addClass("active");
-
-                    $('.tab-pane').removeClass('active');
-                    $('#tab3').addClass('active');
-
-                    $('#tab3').html(res.mainView);
-                } else if (res.success==true && res.step==4) {  
-                    $('.nav-link').removeClass('active');
-                    $("#step4").addClass("active");
-
-                    $('.tab-pane').removeClass('active');
-                    $('#tab4').addClass('active');
-
-                    $('#tab4').html(res.seoView);
-                } else {  
-                    $('.nav-link').removeClass('active');
-                    $('.tab-pane').removeClass('active');
-
-                    $("#step1").addClass("active");
-                    $("#tab1").addClass("active");
-                    alert(res.message);
+                } else {
+                    alert(res.message || "Something went wrong");
                 }
             },
 
@@ -296,10 +372,7 @@
             }
         });
        // $btn.prop('disabled', false).html(originalHtml);
-
     }
-
-    
 
     $(document).ready(() => {
         initSelect2(true);
