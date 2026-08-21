@@ -1,89 +1,110 @@
-@extends('admin.layout.master')
-
-@section('guest_content')
-
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 @php
-    $adminLogo = \App\Models\Setting::where('key','Site.fav_icon')->first();
- @endphp
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<div class="container">
-    <div class="row justify-content-center align-items-center authentication authentication-basic h-100">
-        <div class="col-xxl-4 col-xl-5 col-lg-5 col-md-6 col-sm-8 col-12">
+    $siteLogo = \App\Models\Setting::where('key','Site.logo')->first();
+    $favIcon = \App\Models\Setting::where('key','Site.fav_icon')->first();
+@endphp
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Furnish world</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="shortcut icon" href="{{ env('WEBSITE_URL').'uploads/settings/'.@$favIcon->value }}" type="image/x-icon" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{ env('WEBSITE_URL').'assets/front/css/style_home.css' }}">
+    <link rel="stylesheet" type="text/css" href="{{ env('WEBSITE_URL').'assets/front/tejap/css/style.css' }}">
+</head>
+<body> 
+  
+@csrf 
+<section class="site-content mt-5">
+      <div class="content-wrapper">
+        <div class="container">
             <div class="my-5 d-flex justify-content-center">
-                <a href="#">
-                    <img src="<?php echo env('WEBSITE_URL') .'uploads/settings/'.@$adminLogo->value; ?>" alt="logo"
-                        class="desktop-logo" style="height: 4rem;line-height: 4rem;">
-                    <img src="<?php echo env('WEBSITE_URL') .'uploads/settings/'.@$adminLogo->value; ?>" alt="logo"
-                        class="desktop-dark" style="height: 4rem;line-height: 4rem;">
+                <a href="{{ env('WEBSITE_URL') }}">
+                    <img src="{{ env('WEBSITE_URL') .'uploads/settings/'.@$siteLogo->value }}" alt="logo"
+                        class="desktop-logo" style="height: 12rem;line-height: 4rem;">  
                 </a>
             </div>
-            <div class="card custom-card">
-                <div class="card-body p-5">
-                    <p class="h5 fw-semibold mb-2 text-center">LOGIN</p>
-                    {{-- <p class="mb-4 text-muted op-7 fw-normal text-center">Welcome back Jhon !</p> --}}
-                    <form class="form-horizontal" method="post" action="{{ route('admin-verify-login') }}">
-                        @csrf
-                        <div class="row gy-3">
-                            <div class="col-xl-12">
-                                <label for="email" class="form-label text-default">Email</label>
-                                <input type="text" class="form-control form-control-lg @error('email') is-invalid @enderror" id="email" name="email" placeholder="Enter Email" value="{{old('email')}}">
+          
+          <div class="content-area">
+            
+            <form action="{{ route('admin-verify-login') }}" method="post" autocomplete="off"> 
+                @csrf
+                <div class="col-lg-4 col-md-6 col-sm-10 mx-auto">
+                    <div class="loginregister-area">
+                        <div class="page-header text-center">
+                            <h1 class="page-title">Sign In</h1>
+                        </div>
+                        <div class="loginregister-header">
+                        <h3>Welcome</h3>
+                        <p>Enter your email address to sign in.</p>
+                        </div>
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Whoops!</strong> There were some problems with your input.
+                                <ul class="mt-2 mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+                        @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <strong>Success!</strong> {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+
+                        <div class="form-focus row">
+                            <div class="form-group col-12">
+                                <input type="email" class="form-control" id="email" name="email" placeholder="Email*" value="{{ old('email') }}" required>
                                 @if ($errors->has('email'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('email') }}
-                                </div>
+                                    <div class="invalid-feedback">
+                                        {{ $errors->first('email') }}
+                                    </div>
                                 @endif
                             </div>
-                            <div class="col-xl-12 mb-2">
-                                <label for="password" class="form-label text-default d-block">Password</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control form-control-lg @error('password') is-invalid @enderror" id="password" name="password" placeholder="password" value="" autocomplete="false">
-                                    <button class="btn btn-light" type="button" onclick="createpassword('password', this)" id="button-addon2">
-                                        <i id="eye-icon" class="ri-eye-off-line align-middle"></i>
-                                    </button>
-                                    @if ($errors->has('password'))
+
+                            <div class="form-group col-12">
+                            <div class="password-group">
+                                <input type="password" class="form-control password-input" name="password" id="password" placeholder="Password*" required>
+                                {{-- <span class="password-icon">SHOW</span> --}}
+                                @if ($errors->has('password'))
                                     <div class="invalid-feedback">{{ $errors->first('password') }}</div>
-                                    @endif
-                                </div>
-                                {{-- <div class="mt-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="" id="defaultCheck1">
-                                        <label class="form-check-label text-muted fw-normal" for="defaultCheck1">
-                                            Remember password ?
-                                        </label>
-                                    </div>
-                                </div> --}}
-                                <div class="mt-2">
-                                    <div class="form-check" style="float: right;"> 
-                                        <a class="btn btn-link" href="#">
-                                        {{ __('Forgot Password?') }}
-                                    </a>
-                                    </div>
-                                </div>
+                                @endif
+                            </div>                                           
                             </div>
-                            <div class="col-xl-12 d-grid mt-2">
-                                <button class="btn btn-lg btn-primary" type="submit">Login <i class="fa fa-sign-in"></i></button>
-                            </div>
+                            <input type="hidden" name="cartItems" id="loginCartItems">
+                            {{-- <div class="form-group col-12">
+                                <a href="" class="forgot-pass">Forgot Password?</a>
+                            </div>                     --}}
                         </div>
-                    </form>
-                    {{-- <div class="text-center">
-                        <p class="fs-12 text-muted mt-3">Dont have an account? <a href="sign-up-basic.html"
-                                class="text-primary">Sign Up</a></p>
-                    </div> --}}
+                        <div class="form-submit">
+                            <button type="submit" class="btn btn-primary w-100">Submit</button>
+                        </div>
+                        {{-- <div class="login-social">
+                            <p>Login with social account</p>
+                            <ul class="login-social-icon">
+                            <li class="facebook"><a target="_blank" href="#"><i class="fa-brands fa-facebook-f"></i></a></li>
+                            <li class="facebook"><a target="_blank" href="#"><i class="fa-brands fa-google"></i></a></li>                         
+                            </ul>
+                        </div>          
+                        <div class="loginregister-footer">
+                        <p>Don't have an account? <a href="" class="ms-2 text-decoration-underline">Register</a></p>
+                        </div> --}}
+                    </div>
                 </div>
-            </div>
+            </form>
+          </div>
         </div>
-    </div>
-</div>
+      </div>
+    </section>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ env('WEBSITE_URL').'assets/js/custom.js' }}"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-@endsection
-
-@push('scripts')
-    <!-- Custom-Switcher JS -->
-    <script src="{{ asset('assets/js/custom-switcher.min.js') }}"></script>
-
-    <!-- Bootstrap JS -->
-    <script src="{{ asset('assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-
-    <!-- Show Password JS -->
-    <script src="{{ asset('assets/js/show-password.js') }}"></script>
-@endpush
+</body>
+</html>
