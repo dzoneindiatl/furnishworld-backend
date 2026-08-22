@@ -24,7 +24,7 @@
     </td>
 
     <td>
-        <div class="hstack gap-2 flex-wrap"> -->
+        <div class="hstack gap-2 flex-wrap">
 
             <a href="{{route('admin-price-drops.edit',base64_encode($result->id))}}" class="btn btn-info"><i
                     class="ri-edit-line"></i></a>

@@ -33,12 +33,14 @@ use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\ProductVariantCombination;
 use Illuminate\Support\Facades\{Auth, Http, Log, DB, Mail};
+use App\Services\MailService; 
 
 class OrderController extends Controller
 {
     public $model = 'orders';
-    public $listRouteName;
-    public function __construct(Request $request)
+    public $listRouteName; 
+     public $mailService ; 
+    public function __construct(Request $request, MailService $mailService)
     {
 
         $this->middleware('permission:view_order', ['only' => ['index','items','view']]);
@@ -46,6 +48,7 @@ class OrderController extends Controller
         $this->listRouteName = 'admin-orders.index';
         View()->share('model', $this->model);
         View()->share('listRouteName', $this->listRouteName);
+        $this->mailService = $mailService;
         //$this->request = $request;
     }
 
@@ -386,7 +389,6 @@ class OrderController extends Controller
 
     public function change_status(Request $request)
     {
-
         DB::beginTransaction();
         try {
             $id = $request->id;
@@ -395,45 +397,47 @@ class OrderController extends Controller
 
             $awb_number = $request->awb_number;
             $tracking_url = $request->tracking_url;
+            $shippingType = $request->shipping_type; 
             $delivery_partner_name = $request->delivery_partner_name;
             $remark = strip_tags($request->remark);
             $order = Order::find($id);
 
             $orderStatusId = OrderStatus::where('slug', $status)->value('id');
             $orderstatushistory   = new OrderStatusHistory;
-            // dd($status);
 
-
-
-            // if(!file_exists(resource_path('views/emails/order-'.$status.'.blade.php')))
-            // {
-            //     $success = 'error';
-            //     $message = "Invalid template.";
-            // } else 
-            // {
-            //     if(!empty($order))
-            //     {
-            //         //$this->sendOrderStatusMail($order, $status);
-            //       //  $this->viewOrderStatusMail($id, $status);
-            //     }
-            // $order->user_id = $order->user_id;
             $order->status = $status;
+            if($status == "shipped"){
+                $order->awb_number = $awb_number;
+                $order->tracking_url = $tracking_url;
+                $order->delivery_partner_name = $delivery_partner_name;
+            }
             
             $order->delivery_partner_name = $delivery_partner_name;
             $order->save();
 
-            //  All Order Items update status
             $orderStatusArr = OrderStatus::where('slug',$status)->first();
             if(!empty($orderStatusArr)){
                 $orderStatus =  $orderStatusArr->id;
             }
-            OrderItem::where('order_id', $id)->update([
+            if($status == "shipped"){
+                OrderItem::where('order_id', $id)->update([
+                    'status' => $status,
+                    'remark' => $remark,
+                    'shipping_type'=>$shippingType,
+                    'courier_id' => $delivery_partner_name,
+                    'awb_number'=>$awb_number,
+                    'order_status_id' => $orderStatus
+                ]);
+            }
+            else{
+                OrderItem::where('order_id', $id)->update([
                 'status' => $status,
                 'remark' => $remark,
                 'order_status_id' => $orderStatus
             ]);
-            //  All Order Items update status
+            }            
 
+            info("---------order records----------",[$order]); 
             
             $orderstatushistory->order_id = $id;
             $orderstatushistory->user_id = $order->user_id;
@@ -515,6 +519,10 @@ class OrderController extends Controller
                         'shiprocket_shipment_id' => $shiprocket_shipment_id
                     ]);
                 }
+                $userData = User::where('id',$order->user_id)->first();
+                $orderitem = OrderItem::where('order_id',$order->id)->get();
+                info("order Item-----Controller---",[$orderitem]); 
+                $this->mailService->OrderConfirmed($userData,$orderitem);
             }
             if ($status == 'refunded') {
                 $refundedhistory   = new RefundedHistory;
@@ -531,6 +539,40 @@ class OrderController extends Controller
                     $UserDetails->wallet_avl_balance += $order->total;
                     $UserDetails->save(); 
                 }*/
+            }
+            if ($status == "processing"){
+                $userData = User::where('id',$order->user_id)->first();
+                $orderitem = OrderItem::where('order_id',$order->id)->get();
+                $this->mailService->orderProcessing($userData,$orderitem);
+            }
+            if($status == "shipped"){
+                $userData = User::where('id',$order->user_id)->first();
+                $orderitem = OrderItem::where('order_id',$order->id)->get();
+                $this->mailService->orderShipped($userData,$orderitem);
+            }
+            if($status == "in-transit"){
+                $userData = User::where('id',$order->user_id)->first();
+                $orderitem = OrderItem::where('order_id',$order->id)->get();
+                $this->mailService->orderInTransit($userData,$orderitem);
+            }
+            if($status == "out-for-delivery"){
+                $userData = User::where('id',$order->user_id)->first();
+                   info("---userData---Controller--",[$userData]);
+                $orderitem = OrderItem::where('order_id',$order->id)->get();
+                  info("------orderdata-------controller",[$orderitem]); 
+                $this->mailService->orderOutForDelivery($userData,$orderitem);
+            }
+
+            if($status == "delivered"){
+                $userData = User::where('id',$order->user_id)->first();
+                $orderitem = OrderItem::where('order_id',$order->id)->get();
+                $this->mailService->orderDelivered($userData,$orderitem);
+            }
+
+            if($status == "cancelled"){
+                $userData = User::where('id',$order->user_id)->first();
+                $orderitem = OrderItem::where('order_id',$order->id)->get();
+                $this->mailService->orderCancelled($userData,$orderitem);
             }
             DB::commit();
             $success = 'success';
@@ -869,13 +911,11 @@ class OrderController extends Controller
         $GSTIN = config('Site.GSTIN');
         $GSTIN = empty($GSTIN) ? $GSTIN : Setting::where('key','Site.GSTIN')->value('value');
         $ordertype = 'order';
-        //echo $GSTIN;die;
         $currency = Currency::where('currency_code', $order->currency_code)->value('symbol');
         $supplySetting = InvoiceSetting::with(['country', 'state', 'city'])
             ->where('is_active', 1)
-            ->first();
+            ->first();     
         $ordertype = "order";
-        //$randonNum = rand(1000, 9999);
         return view('invoices.order_new_invoice', [
             'checkout_data' => $checkout_data,
             'order' => $order,

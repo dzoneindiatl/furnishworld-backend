@@ -178,4 +178,7 @@ class Order extends Model
     public function orderItem() {
         return $this->hasMany(OrderItemTax::class, 'order_item_id');
     }
+    public function courier() {
+        return $this->belongsTo(Couriers::class,'delivery_partner_name'); 
+    }
 }

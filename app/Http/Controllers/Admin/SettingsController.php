@@ -70,7 +70,7 @@ class SettingsController extends Controller
     }
 
     public function create()
-    {
+    {   
         return  View("admin.$this->model.add");
     }
 

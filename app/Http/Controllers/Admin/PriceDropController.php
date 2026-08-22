@@ -94,9 +94,7 @@ class PriceDropController extends Controller
     public function create(Request $request)
     {
         $categories = Category::whereNull('parent_id')->where('is_active', 1)->where('is_deleted', 0)->get();
-        $subcategory = Category::where('is_active', 1)->where('is_deleted', 0)->get();
-        $subproducts = Product::where('is_active', 1)->where('is_deleted', 0)->get();
-        return view("admin.$this->model.add", compact('categories', 'subcategory', 'subproducts'));
+        return view("admin.$this->model.add", compact('categories'));
     }
 
     // public function create(Request $request)
@@ -272,10 +270,14 @@ class PriceDropController extends Controller
         $priceChange->end_date = $request->end_date;
         
         // If multiple products are selected, store their IDs as comma-separated values
-        if ($request->product_id) {
+        if(isset($request->allProduct) && !is_null($request->allProduct)){
+            $priceChange->product_id = $request->allProduct; 
+        }else{
+            if ($request->product_id) {
             $priceChange->product_id = implode(',', $request->product_id);
-        } else {
-            $priceChange->product_id = null;
+            } else {
+                $priceChange->product_id = null;
+            }
         }
         
         $priceChange->save();

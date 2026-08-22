@@ -99,14 +99,8 @@
                                                 <label for="product_id" class="form-label">Products</label>
                                                 <select name="product_id[]" id="product_id" class="form-control" multiple>
                                                     <option value="">Select Product</option>
-                                                    @if(!empty($product) && isset($product))
-                                                    @foreach($subproducts as $products)
-                                                    <option value="{{ $products->id }}" {{ (is_array($product->related_products) && in_array($products->id, $product->related_products)) ? 'selected' : '' }}>
-                                                        {{ ucfirst($products->name) }}
-                                                    </option>
-                                                    @endforeach
-                                                    @endif
                                                 </select>
+                                                <input type="checkbox" value="all" name="allProduct"> All Product
                                             </div>
 
                                             <div class="col-xl-6">
@@ -191,33 +185,6 @@
 <script src="{{ asset('assets/js/repeater.js')}}"></script>
 
 <script>
-    // $(document).ready(function() {
-    //     // Listen for changes in the assign_type dropdown
-    //     $('#assign_type').change(function() {
-    //         var selectedValue = $(this).val();
-
-    //         // Hide all dropdowns initially
-    //         $('#categoryDropdown, #productDropdown').hide();
-
-    //         // Show the dropdown corresponding to the selected assign_type
-    //         if (selectedValue === 'category') {
-    //             $('#categoryDropdown').show();
-    //         } else if (selectedValue === 'product') {
-    //             $('#productDropdown').show();
-    //         }
-    //     });
-
-    //     // Check the initial value of assign_type and show the corresponding dropdown
-    //     var initialAssignType = $('#assign_type').val();
-    //     if (initialAssignType === 'category') {
-    //         $('#categoryDropdown').show();
-    //     } else if (initialAssignType === 'product') {
-    //         $('#productDropdown').show();
-    //     }
-
-    //     // Trigger change event on assign_type dropdown to initialize visibility
-    //     $('#assign_type').trigger('change');
-    // });
     $(document).ready(function() {
         $('#product_id').select2({
             placeholder: "Choose item",
@@ -313,7 +280,7 @@
                     $.each(response.subcategories, function(index, subcat) {
 
                         html += '<option value="' + subcat.id + '">' + subcat.name + '</option>';
-
+                            getproduct(subcat.id); 
                     });
 
                 } else {
@@ -335,7 +302,6 @@
         getchildcategory(null);
         getproduct(null);
     }
-
 
     function getchildcategory() {
         var subctg_ids = $('#prdct_sub_category_id').val();
@@ -397,6 +363,8 @@
             },
             success: function(response) {
                 if (response.success) {
+                    console.log(response); 
+                    $('#product_id').empty();
                     var currentSelections = $('#product_id').val() || [];
                     var options = '<option value="add_item" disabled>Add another Item</option>';
                     $.each(response.subproducts, function(index, item) {

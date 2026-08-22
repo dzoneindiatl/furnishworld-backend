@@ -1,6 +1,5 @@
 <!-- Start::main-sidebar-header -->
 @php
-    // $admin_logo = Config('constant.SETTINGS_IMAGE_URL') . Config('Site.admin_logo');
     $logo = \App\Models\Setting::where('key','Site.admin_logo')->first();
  @endphp
 <div class="main-sidebar-header">
@@ -8,9 +7,7 @@
         <img src="{{ env('WEBSITE_URL').'uploads/settings/'.@$logo->value }}" alt="logo" class="desktop-dark">
     </a>
 </div>
-<!-- End::main-sidebar-header -->
 
-<!-- Start::main-sidebar -->
 <div class="main-sidebar" id="sidebar-scroll">
     <?php
     $segment2 = Request()->segment(1);

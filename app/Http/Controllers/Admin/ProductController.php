@@ -4221,7 +4221,7 @@ class ProductController extends Controller
     public function ajaxgetproduct(Request $request)
     {
         $subcategory_id = $request->input('subcatid');
-        $subproducts = Product::where(['main_sub_category_id' => $subcategory_id, 'is_active' => 1])->select('id', 'name')->get();
+        $subproducts = Product::where(['main_child_category_id' => $subcategory_id, 'is_active' => 1])->orWhere('main_sub_category_id',$subcategory_id)->select('id', 'name')->get();
         //dd($subproducts);
         return response()->json([
             'success' => true,

@@ -395,29 +395,6 @@
                             `;
                 } else if (status === 'refunded') {
                     let refundInfo = '';
-                    // if(refundRequests[id]){
-                    //     refund_mode = refundRequests[id]['refund_mode'];
-                    //     if(refund_mode == "account"){
-                    //         refundInfo = `
-                    //                     <p class="text-danger">Please copy below user bank details before submitting the refund request.</p>
-                    //                     <table class="table table-bordered mb-3">
-                    //                         <tr>
-                    //                             <td>User Refund Mode</td>
-                    //                             <td>Account Number</td>
-                    //                             <td>IFSC Code</td>
-                    //                             <td>Bank Name</td>
-                    //                         </tr>
-                    //                         <tr>
-                    //                             <td>Bank Channel</td>
-                    //                             <td>${refundRequests[id]['account_number']}</td>
-                    //                             <td>${refundRequests[id]['ifsc_code']}</td>
-                    //                             <td>${refundRequests[id]['bank_name']}</td>
-                    //                         </tr>
-                    //                     </table>
-                    //                 `;
-                    //     }
-                        
-                    // }
                     inputHtml = refundInfo + `
                                 <div>
                                     <div style="display: flex;justify-content: center;">
@@ -439,7 +416,6 @@
                         `;
                 }
 
-                // Status change confirmation
                 Swal.fire({
                     title: "Are you sure?",
                     text: "Want to change this status?",
@@ -465,34 +441,27 @@
                                     tracking_url: (status === 'shipped') ? $(
                                         '#tracking_url').val() : null,
                                     delivery_partner_name: (status === 'shipped') ? $(
-                                        '#delivery_partner_name').val() : null
+                                        '#delivery_partner_name').val() : null,
+                                    shipping_type:  $('input[name="shipping_type"]:checked').val()    
                                 };
                             }
                         }).then(function(remarkResult) {
                             // Ajax call for status update
                             if (remarkResult.isConfirmed) {
                                 console.log(remarkResult.value);
-                                if (remarkResult.value.shipping_type == 'Manual' && (!
-                                        remarkResult.value.awb_number || !remarkResult.value
-                                        .tracking_url || !remarkResult.value.courier_id)) {
+                                if (remarkResult.value.shipping_type == 'Manual' && (!remarkResult.value.awb_number || !remarkResult.value.tracking_url || !remarkResult.value.delivery_partner_name)) {
                                     that.val(currentStatus);
                                     Swal.fire("Cancelled",
                                         "Please fill all the required fields :)",
                                         "error");
                                     return;
-                                } else if (remarkResult.value.shipping_type ==
-                                    'Automatic' && (!remarkResult.value.auto_height || !
-                                        remarkResult.value.auto_breadth || !remarkResult
-                                        .value.auto_length)) {
+                                } else if (remarkResult.value.shipping_type =='Automatic' && (!remarkResult.value.auto_height || !remarkResult.value.auto_breadth || !remarkResult.value.auto_length)) {
                                     that.val(currentStatus);
                                     Swal.fire("Cancelled",
                                         "Please fill all the required fields :)",
                                         "error");
                                     return;
-                                } else if (remarkResult.value.shipping_type ==
-                                    'Automatic' && (remarkResult.value.auto_height < 0.5 ||
-                                        remarkResult.value.auto_breadth < 0.5 ||
-                                        remarkResult.value.auto_length < 0.5)) {
+                                } else if (remarkResult.value.shipping_type == 'Automatic' && (remarkResult.value.auto_height < 0.5 || remarkResult.value.auto_breadth < 0.5 || remarkResult.value.auto_length < 0.5)) {
                                     that.val(currentStatus);
                                     Swal.fire("Cancelled",
                                         "Height, length and breadth must each be greater than 0.5",
@@ -516,12 +485,12 @@
                                         status: status,
                                         remark: remarkResult.value.remark || null,
                                         awb_number: remarkResult.value.awb_number,
-                                        tracking_url: remarkResult.value
-                                            .tracking_url,
-                                        delivery_partner_name: remarkResult.value
-                                            .delivery_partner_name
+                                        tracking_url: remarkResult.value.tracking_url,
+                                        delivery_partner_name: remarkResult.value.delivery_partner_name,
+                                        shipping_type: remarkResult.value.shipping_type                                             
                                     },
                                     success: function(response) {
+                                        console.log(response); 
                                         Swal.fire({
                                             icon: response.status,
                                             title: response.message,

@@ -55,4 +55,7 @@ class OrderItem extends Model
     public function cancelRequest() {
         return $this->hasOne(OrderCancellation::class);
     }
+    public function courier() {
+        return $this->belongsTo(Couriers::class,'courier_id'); 
+    }
 }

@@ -41,14 +41,6 @@
                             </option>
                         @endforeach
                     </optgroup>
-                    {{-- <optgroup label="Collection">
-                        @foreach ($collections as $collection)
-                            <option value="{{ $collection['id'] }}"
-                                {{ old('main_category_id', $product->main_category_id ?? '') == $collection['id'] ? 'selected' : '' }}>
-                                {{ $collection['name'] }}
-                            </option>
-                        @endforeach
-                    </optgroup> --}}
                 </select>
                 @error('main_category_id')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -73,64 +65,7 @@
                 </select>
             </div>
             <div id="variantContainer"></div>
-            {{-- <div id="variantContainer">
-                @if(count($selectedVariants) > 0)
-                    @foreach($selectedVariants as $i => $data)
-                        <div class="variant-card card p-3 mb-3 shadow-sm">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <label class="form-label">Select Variant</label>
-                                    <select class="form-control variantSelect" name="variant[]">
-                                        <option value="">Select Variant</option>
-                                        @foreach($variantsData as $variant)
-                                            <option {{ $data['variant_id'] == $variant->id ? 'selected' : '' }} value="{{ $variant->id }}">{{ $variant->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-7">
-                                    <label class="form-label">Variant Values</label>
-                                    <select name="variant_values[{{ $i }}][]" 
-                                            class="form-control variantValuesSelect product_select2" 
-                                            multiple 
-                                            data-selected-values='@json($data['variant_values'])'>
-                                        <option value="">Select Variant Value</option>
-                                    </select>
-                                </div>
-                                @if($i > 0)
-                                    <div class="col-md-1 d-flex align-items-end" >
-                                        <button type="button" class="btn btn-danger removeVariant">✕</button>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
-                @else 
-                    <div class="variant-card card p-3 mb-3 shadow-sm">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label class="form-label">Select Variant</label>
-                                <select class="form-control variantSelect" name="variant[]">
-                                    <option value="">Select Variant</option>
-                                    @foreach($variantsData as $variant)
-                                        <option value="{{ $variant->id }}">{{ $variant->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-7">
-                                <label class="form-label">Variant Values</label>
-                                <select name="variant_values[0][]" class="form-control variantValuesSelect product_select2" multiple>
-                                    <option value="">Select Variant Value</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <div class="mb-3 add-more-variant">
-                <button type="button" class="btn btn-success" id="addVariant">+ Add Variant</button>
-            </div> --}}
-
+           
             <div class="mb-3 text-end">
                 <button type="button" class="btn btn-primary nextBtn" id="nextBtn" onclick="submitProduct()">
                     <span class="btn-text">Save & Continue</span>
@@ -195,7 +130,6 @@
         });
     };
 
-
     window.ajaxCall = function(url, data, onSuccess) {
         $.ajax({
             type: 'GET',
@@ -233,21 +167,15 @@
         $el.select2({ width: '100%', placeholder });
     };
 
-
     window.loadSubCategories = function() {
         const catId = $(selectorsData.main).val();
 
-
-        ajaxCall("{{ route('admin-product-ajax-getrelatedsubcategories') }}", { category_ids: catId }, res => {
-           
+        ajaxCall("{{ route('admin-product-ajax-getrelatedsubcategories') }}", { category_ids: catId }, res => {           
             if (res.success && res.subcategories.length) {
-               
                 populateSelect(selectorsData.sub, res.subcategories, "Subcategory", preselected.sub);
                 $('.subCategorieHide').removeClass('d-none');
-
                 populateSelect(selectorsData.child, [], "Child Category");
                 $('.childCategoryHide').addClass('d-none');
-
                 if (preselected.sub) {
                     loadChildCategories(); // load child if sub is preselected
                 }
@@ -266,6 +194,9 @@
             if (res.success && res.childcat.length) {
                 populateSelect(selectorsData.child, res.childcat, "Child Category", preselected.child);
                 $('.childCategoryHide').removeClass('d-none');
+                if (preselected.child) {
+                    getVariantData();
+                }
             } else {
                 $('.childCategoryHide').addClass('d-none');
                 populateSelect(selectorsData.child, [], "Child Category");
@@ -377,7 +308,7 @@
     $(document).ready(() => {
         initSelect2(true);
 
-        console.log($(selectorsData.main).val());
+        console.log("variant record------",$(selectorsData.main).val());
         if ($(selectorsData.main).val()) {
             loadSubCategories();
         }

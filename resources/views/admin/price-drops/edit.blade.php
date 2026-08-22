@@ -320,7 +320,7 @@
                     $.each(response.subcategories, function(index, subcat) {
 
                         html += '<option value="' + subcat.id + '">' + subcat.name + '</option>';
-
+                            getproduct(subcat.id);
                     });
 
                 } else {
@@ -404,6 +404,7 @@
             },
             success: function(response) {
                 if (response.success) {
+                    $('#product_id').empty(); 
                     var currentSelections = $('#product_id').val() || [];
                     var options = '<option value="add_item" disabled>Add another Item</option>';
                     $.each(response.subproducts, function(index, item) {
