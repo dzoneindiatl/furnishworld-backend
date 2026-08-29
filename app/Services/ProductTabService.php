@@ -326,9 +326,8 @@ class ProductTabService
     }
 
     protected function handleVariants(Product $product, array $data)
-    {
+    {   
         ProductVariantValue::where('product_id', $product->id)->update(['is_main' => 0]);
-        
         $getVariantValue =ProductVariantValue::where('product_id', $product->id)->first(); 
 
         if (!empty($data['main_variant'])) {
@@ -345,17 +344,8 @@ class ProductTabService
         for ($i = 0; $i < $totalCombinations; $i++) {
             $product_sku = strtolower(str_replace(' ', '', $data['sku']));
             $varient_sku = strtolower(str_replace(' ', '', $data['variant_sku'][$i]));
-            // $varient_sku = strtolower(str_replace($data['sku'].'_', '', $varient_sku));
-            
-            $prefix = $product_sku.'_'; 
-            //$sku         = $product_sku.'_'.$varient_sku;
-                // Main SKU already present hai, dobara add mat karo
-            if (str_starts_with($varient_sku, $prefix)) {
-                $sku = $varient_sku;
-            } else {
-                // Main SKU present nahi hai, first time add karo
-                $sku = $product_sku . '_' . $varient_sku;
-            }
+        
+            $sku         = $varient_sku; 
             $combo       = $data['combo'][$i] ?? '';
             $price       = $data['variant_price'][$i] ?? 0;
             $salePrice   = $data['variant_sale_price'][$i] ?? $price;

@@ -121,7 +121,7 @@
                 </td>
             @endif 
             <td class="move-line">
-                <a href="{{ env('WEBSITE_URL') .'product/'. productSlug($product->name) . '.html/' . productSlug($product->sku) }}"
+                <a href="{{ env('WEBSITE_URL') .'product/product/'. productSlug($product->name) . '.html/' . $product->sku }}"
                      target="_blank">
 					<span class="product-name-tooltip showViewIcon" title="{{ $product->name ?? 'N/A' }}">
                         {{ Str::limit($product->name ?? 'N/A', 20) }} 

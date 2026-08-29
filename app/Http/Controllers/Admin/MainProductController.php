@@ -63,17 +63,9 @@ class MainProductController extends Controller
         return view('admin.prodcuts.add-new-product', compact('categories', "product", "productDetailManagers"));
     }
 
-    /**
-     * Methode :- POST
-     * Function :- saveProduct
-     * Description :- Save all information related to the product.
-     *
-     */
-
     public function saveStep1(ProductStep1 $request, ProductTabService $service)
     { 
         $product = $service->step1($request->all());
-        info("product data-------",[$product]); 
         return response()->json([
             'success' => true,
             'product_id' => $product->id,
@@ -127,7 +119,6 @@ class MainProductController extends Controller
     }
     public function previousStep3($productId)
     {   
-
         $product = Product::findOrFail($productId);
         $attributesData = CategoryAttribute::with('attribute:id,name')
             ->where('category_id', $product->main_category_id)
@@ -139,14 +130,11 @@ class MainProductController extends Controller
       
         $productDetailManagerIds = Category::where('id', $product->main_category_id)->value('product_detail_manager');
         $productDetailManagerIds = explode(',', $productDetailManagerIds);
-        $productDetailData = ProductDetailManager::whereIn('id',$productDetailManagerIds)->get(); 
-        info("-----product detail section-------",[$productDetailData]); 
+        $productDetailData = ProductDetailManager::whereIn('id',$productDetailManagerIds)->orderBy('order','asc')->get(); 
         $preselectedAttributes = ProductAttribute::where('product_id', $productId)->get();
         $categories = Category::with('children.children')->whereNull('parent_id')->where('is_deleted', 0)->get();
         $activeCategorie = Category::with('children.children')->where('is_deleted', 0)->whereNull('parent_id')->where('id', $product->main_category_id)->first(); 
-        info("----------previousStep3-----activeCategorie----",[$activeCategorie]); 
-        $variantReleatedProduct = $this->getVariantReleatedProduct($productId); 
-        info('-----previousStep3------variantReleatedProduct---',[$variantReleatedProduct]); 
+        $variantReleatedProduct = $this->getVariantReleatedProduct($productId);  
         
         return view('admin.prodcuts.advance_feature_combined', [
             'attributesData'            =>  $attributesData,
@@ -269,7 +257,6 @@ class MainProductController extends Controller
             $existingCombos,
             $primaryValues
         );
-        info("-----------groupedCombinations------",[$groupedCombinations]); 
         $groupedDeleted = $this->groupByPrimaryVariant(
             $deletedCombos,
             $primaryValues
