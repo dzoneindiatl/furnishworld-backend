@@ -22,9 +22,9 @@
 @endphp
 <!-- Page Header -->
 <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-<a href="{{ route('admin-category.index') }}?{{ $query }}" class="btn btn-dark">
-    Back
-</a>
+    <a href="{{ route('admin-category.index') }}?{{ $query }}" class="btn btn-dark">
+        Back
+    </a>
     <div class="ms-md-1 ms-0">
         <nav>
             <ol class="breadcrumb mb-0">
@@ -108,48 +108,7 @@
                                     @enderror
                                 </div>
                             </div>
-                        </div>
-                        <!-- <div class="col-xl-6">
-                            <div class="card-body p-0">
-                                <div class="mb-3">
-                                    <label for="show_on_home" class="form-label">
-                                        Show On Home Page
-                                    </label>
-
-                                    {{-- ✅ Hidden input to send 0 if unchecked --}}
-                                    <input type="hidden" name="show_on_home" value="0">
-
-                                    <input type="checkbox" id="show_on_home" name="show_on_home" value="1"
-                                        {{ old('show_on_home', $model->show_on_home ?? 0) == 1 ? 'checked' : '' }}>
-                                </div>
-                            </div>
-                        </div> -->
-
-                        <!-- <div class="col-xl-2">
-                            <div class="card-body p-0">
-                                <div class="mb-3">
-                                    <label for="show_on_home" class="form-label">
-                                        Show On Menu
-                                    </label>
-                                    <input type="hidden" name="show_on_home" value="0">
-                                    <input type="checkbox" id="show_on_home" name="show_on_home" value="1"
-                                        {{ old('show_on_home', $category->show_on_home ?? 0) == 1 ? 'checked' : '' }}>
-                                </div>
-                            </div>
-                        </div>    
-                        <div class="col-xl-2">
-                            <div class="card-body p-0">
-                                <div class="mb-3">
-                                    <label for="show_on_menu" class="form-label">
-                                        Show On Home Page
-                                    </label>
-                                    <input type="hidden" name="show_on_menu" value="0">
-                                    <input type="checkbox" id="show_on_menu" name="show_on_menu" value="1"
-                                        {{ old('show_on_menu', $category->show_on_menu ?? 0) == 1 ? 'checked' : '' }}>
-                                </div>
-                            </div>
-                        </div> -->
-                                
+                        </div>            
                         <div class="col-xl-6 mb-3">
                             <label for="category" class="form-label">Url</label>
                             <input type="url" class="form-control" name="url" value="{{ old('url') }}">
@@ -188,16 +147,6 @@
                             </div>
                             @enderror
                         </div>
-                        <!-- <div class="col-xl-6 mb-3">
-                            <label for="width" class="form-label">Thumbnail Image Width</label>
-                            <input type="text" class="form-control" id="width" name="width" value="{{ old('width') }}">
-                        </div>
-                        <div class="col-xl-6 mb-3">
-                            <label for="height" class="form-label">Thumbnail Image Height</label>
-                            <input type="text" class="form-control" id="height" name="height"
-                                value="{{ old('height') }}">
-                        </div> -->
-
                         <div class="col-xl-6 mb-3">
                             <label for="video" class="form-label">Video</label>
                             <input type="file" class="form-control @error('video') is-invalid @enderror" id="video"
@@ -228,8 +177,8 @@
                     </div>
                 </div>
             </div>
-
-            <div class="accordion mt-4" id="categoryAccordion">
+            @if(isset($pageTitle) && $pageTitle == 'Categories')
+                <div class="accordion mt-4" id="categoryAccordion">
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingProductDetailManager">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -653,13 +602,11 @@
                         </div>
                     </div>
                 </div>
-
-               
-
-                <div class="px-4 py-3 border-top d-sm-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary">Save & Continue</button>
                 </div>
-            </div>
+            @endif    
+            <div class="px-4 py-3 border-top d-sm-flex justify-content-end">
+                <button type="submit" class="btn btn-primary btn-lg">Save</button>
+            </div> 
         </form>
     </div>
 </div>

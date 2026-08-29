@@ -74,10 +74,10 @@ config(["Reading.default_currency"=>"₹"]);
 config(["Reading.records_per_page"=>"10"]);
 config(["Referral.receiver"=>"100"]);
 config(["Referral.sender"=>"180"]);
-config(["Site.admin_logo"=>"AUG2026/1787312227-settings.webp"]);
+config(["Site.admin_logo"=>"AUG2026/1787735982-settings.webp"]);
 config(["Site.CIN"=>""]);
 config(["Site.copyright"=>"© 2025&nbsp; Furnish World Design and Developed by <a href='https://dzoneindia.co.in/'>Dzone India</a>"]);
-config(["Site.fav_icon"=>"AUG2026/1787312258-settings.webp"]);
+config(["Site.fav_icon"=>"AUG2026/1787735982-settings.webp"]);
 config(["Site.from_email"=>"furnishworlds@gmail.com"]);
 config(["Site.GSTIN"=>""]);
 config(["Site.invoice_terms"=>"<div><strong>Terms &amp; conditions</strong></div>
@@ -180,7 +180,7 @@ C. Limitation of Liability: We shall not be liable for any damages, losses, or e
 &nbsp;<br />
 D. Consequential Damages: In no event"]);
 config(["Site.landline"=>"9166823229"]);
-config(["Site.logo"=>"JUL2026/1783656397-settings.webp"]);
+config(["Site.logo"=>"AUG2026/1787735982-settings.webp"]);
 config(["Site.order_receive_email"=>"furnishworlds@gmail.com"]);
 config(["Site.PAN"=>""]);
 config(["Site.phone_number"=>"+919001802322"]);

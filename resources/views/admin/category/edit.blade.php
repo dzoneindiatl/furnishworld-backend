@@ -133,42 +133,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- <div class="col-xl-2">
-                            <div class="card-body p-0">
-                                <div class="mb-3">
-                                    <label for="show_on_home" class="form-label">
-                                        Show On Menu
-                                    </label>
-
-                                    <input type="checkbox" id="show_on_home" name="show_on_home" value="1"
-                                        {{ old('show_on_home', $category->show_on_home ?? 0) == 1 ? 'checked' : '' }}>
-                                </div>
-                            </div>
-                        </div>    
-                        <div class="col-xl-2">
-                            <div class="card-body p-0">
-                                <div class="mb-3">
-                                    <label for="show_on_home" class="form-label">
-                                        Show On Home Page
-                                    </label>
-
-                                    <input type="checkbox" id="show_on_menu" name="show_on_menu" value="1"
-                                        {{ old('show_on_menu', $category->show_on_menu ?? 0) == 1 ? 'checked' : '' }}>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-2">
-                            <div class="card-body p-0">
-                                <div class="mb-3">
-                                    <label for="is_active" class="form-label">
-                                        Is Active
-                                    </label>
-
-                                    <input type="checkbox" id="is_active" name="is_active" value="1"
-                                        {{ old('is_active', $category->is_active ?? 0) == 1 ? 'checked' : '' }}>
-                                </div>
-                            </div>
-                        </div> -->
                         <div class="col-xl-6 mb-3">
                             <label for="category" class="form-label">Url</label>
                             <input type="url" class="form-control"name="url" value="{{ $category->url }}">
@@ -276,7 +240,7 @@
 
             </div>
 
-
+         @if(isset($pageTitle) && $pageTitle == 'Categories')
             <div class="accordion mt-4" id="categoryAccordion">
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingProductDetailManager">
@@ -832,7 +796,7 @@
                 </div>
 
             </div>
-
+            @endif 
             <div class="px-4 py-3 border-top border-block-start-dashed d-sm-flex justify-content-end">
                 <button type="submit" class="btn btn-primary">Submit</button>
             </div>

@@ -1,4 +1,5 @@
 @foreach ($groupedCombinations as $primaryId => $combos)
+    {{ info('----------combos----------',[$combos]) }}
     @php
         $primaryValue = $primaryValueData[$primaryId] ?? null;
         $images = $graphics[$primaryId . '_image'] ?? collect();
@@ -194,19 +195,20 @@
                         @foreach ($combos as $combo)
                             @php
                                 $ids = explode('_', $combo);
-                                info("blade----ids-----",[$ids]);
+                                info("------ids------",[$ids]); 
                                 $variantValues = \App\Models\VariantValue::whereIn('id', $ids)->get()->keyBy('id');
-                                info('blade---variantvalues-----',[$variantValues]); 
+                                info("----variantValues------",[$variantValues]); 
                                 $names = collect($ids)->map(fn($id) => $variantValues[$id]->name ?? '')->toArray();
-                                info("blade---name----",$names); 
+                                info("-------names--------",[$names]); 
                                 $variantName = implode(' ', $names);
-                                    info("------variantName----",[$variantName]); 
                                 $variantSKU = strtolower(implode('_', $names));
+                                info("----------variantSKu------",[$variantSKU]); 
                                 $valueIds = array_map('intval', $ids);
+                                
                                 $savedCombo = \App\Models\ProductVariantCombination::where('product_id', $product_id)
                                     ->where('combination_id',json_encode($valueIds))
                                     ->first();
-
+                                info("--------savedCombo--------",[$savedCombo]); 
                             @endphp
 
                             <?php 
@@ -278,7 +280,6 @@
                     </tbody>
                 </table>
             </div>
-            {{ info('------------blade-------primaryId----------',[$primaryId]) }}
             <div  id="collapseExample_{{ $primaryId }}">
                 <div class="card card-body">
                     <label for="specialization_{{ $primaryId }}" class="form-label fw-semibold">Specification</label>
@@ -390,40 +391,40 @@ function deleteVariantRow(primaryId, comboId, el) {
     row.style.display = 'none';
 }
 
-function openRestoreModal(primaryId) {
-    window.currentPrimaryId = primaryId;
+// function openRestoreModal(primaryId) {
+//     window.currentPrimaryId = primaryId;
 
-    const pool = document.getElementById(`restore_pool_${primaryId}`);
-    const listContainer = document.getElementById('restoreVariantList');
-    listContainer.innerHTML = '';
+//     const pool = document.getElementById(`restore_pool_${primaryId}`);
+//     const listContainer = document.getElementById('restoreVariantList');
+//     listContainer.innerHTML = '';
 
-    if (pool) {
-        const rows = pool.querySelectorAll('tr');
-        rows.forEach(row => {
-            const comboId = row.getAttribute('data-combo-id');
-            const name = row.getAttribute('data-variant-name');
-            const sku = row.getAttribute('data-variant-sku');
+//     if (pool) {
+//         const rows = pool.querySelectorAll('tr');
+//         rows.forEach(row => {
+//             const comboId = row.getAttribute('data-combo-id');
+//             const name = row.getAttribute('data-variant-name');
+//             const sku = row.getAttribute('data-variant-sku');
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'form-check-input me-2';
-            checkbox.value = comboId;
+//             const checkbox = document.createElement('input');
+//             checkbox.type = 'checkbox';
+//             checkbox.className = 'form-check-input me-2';
+//             checkbox.value = comboId;
 
-            const label = document.createElement('label');
-            label.className = 'form-check-label';
-            label.textContent = `${name} — ${sku}`;
+//             const label = document.createElement('label');
+//             label.className = 'form-check-label';
+//             label.textContent = `${name} — ${sku}`;
 
-            const wrapper = document.createElement('div');
-            wrapper.className = 'form-check mb-2';
-            wrapper.appendChild(checkbox);
-            wrapper.appendChild(label);
+//             const wrapper = document.createElement('div');
+//             wrapper.className = 'form-check mb-2';
+//             wrapper.appendChild(checkbox);
+//             wrapper.appendChild(label);
 
-            listContainer.appendChild(wrapper);
-        });
-    }
+//             listContainer.appendChild(wrapper);
+//         });
+//     }
 
-    new bootstrap.Modal(document.getElementById('restoreVariantModal')).show();
-}
+//     new bootstrap.Modal(document.getElementById('restoreVariantModal')).show();
+// }
 
 function restoreSelectedVariants() {
     const checkboxes = document.querySelectorAll('#restoreVariantList input[type="checkbox"]:checked');

@@ -160,9 +160,7 @@ Route::prefix('')->name('admin-')->group(function () {
 
 
             Route::match(['get', 'post'], 'list', [ProductController::class, 'index'])->name('list');
-            //Route::any('create-new-product', [MainProductController::class, 'createNewProduct'])->name('create-new-product');
             Route::get('create-new-product/{token?}', [MainProductController::class, 'addNewProduct'])->name('create-new-product');
-            //Route::get('add-new-product', [MainProductController::class, 'addNewProduct'])->name('add-new-product');
             Route::any('save-product/{product_id?}', [MainProductController::class, 'store'])->name('save-new-product');
             Route::get('get-product-variant-details/{id}', [MainProductController::class, 'getProductVariantDetails'])->name('get-product-variant-details');
             Route::post('update-product-variant-details', [MainProductController::class, 'UpdateProductVariantDetails'])->name('update-product-variant-details');
@@ -206,6 +204,9 @@ Route::prefix('')->name('admin-')->group(function () {
                 );
             });
             
+            Route::get('get/subcategory',[ProductController::class,'getSubCategories'])->name('get-subcategory'); 
+
+
             Route::prefix('options')->name('options-')->group(function () {
                 Route::get('list', [ProductOptionsController::class, 'index'])->name('list');
                 Route::get('create', [ProductOptionsController::class, 'create'])->name('create');

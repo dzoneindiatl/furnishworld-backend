@@ -299,8 +299,6 @@ class ProductController extends Controller
     }*/
     public function index(Request $request)
     {
-        //echo "<pre>@@@"; print_r($request->all()); exit;
-
         session()->forget('varient_product_image');
         session()->forget('product_images');
         try {
@@ -309,7 +307,9 @@ class ProductController extends Controller
             $offset = !empty($request->input('offset')) ? $request->input('offset') : 0;
             $limit = !empty($request->input('limit')) ? $request->input('limit') : Config("Referral.receiver");
             $DB = Product::select('id', 'name', 'sku', 'product_type','short_description', 'slug', 'buying_price', 'selling_price', 'category_id', 'sub_category_id', 'main_category_id', 'main_sub_category_id', 'in_stock', 'is_featured', 'is_new_arrivals', 'is_new', 'trending', 'best_selling', 'best_seller', 'is_active', 'draf', 'qty');
-
+            $categories = Category::whereNull('parent_id')->where('is_deleted',0)->get();
+            $subCategory = Category::select('id','name')->whereIn('parent_id',$categories->pluck('id'))->where('is_deleted',0)->where('is_active',1)->get(); 
+            $subChildCategory = Category::select('id','name')->whereIn('parent_id',$subCategory->pluck('id'))->where('is_deleted',0)->where('is_active',1)->get(); 
             if ($request->all()) {
                 $searchData = $request->all();
                 unset($searchData['display']);
@@ -344,12 +344,16 @@ class ProductController extends Controller
                     $DB->where("sku", 'like', '%' . $searchData['sku'] . '%');
                 }
                 if (isset($searchData['category_id']) && !empty($searchData['category_id'])) {
-                    $DB->where("main_category_id", $searchData['category_id']);
+                    $DB->whereJsonContains('category_id',(string)$searchData['category_id']); 
+                }
+                if (isset($searchData['sub_category_id']) && !empty($searchData['sub_category_id'])) {
+                    $DB->whereJsonContains('sub_category_id',(string)$searchData['sub_category_id']); 
+                }
+                if (isset($searchData['sub_child_category_id']) && !empty($searchData['sub_child_category_id'])) {
+                    $DB->whereJsonContains('child_category_id',(string)$searchData['sub_child_category_id']); 
                 }
             }
-            //$productLsit = $DB->with('frontProductImage', 'category','category.parentcategory')->where('is_deleted','0')->orderBy('id','DESC')->offset($offset)->limit(100)->get();
             $totalResults = $DB->count();
-
             $productLsit = $DB->with([
                 'frontProductImage',
                 'firstProductImage',
@@ -357,37 +361,20 @@ class ProductController extends Controller
                 'subCategory',
                 'mainCategory',
                 'mainSubCategory',
-                //'category.parentcategory'
             ])->withCount([
                 'reviews as total_reviews',
                 'reviews as new_reviews' => function ($query) {
                     $query->where('created_at', '>=', now()->subDays(7)); // Count reviews from the last 7 days
                 }
             ])->where('is_deleted', '0')
-                // ->orderBy('id', 'DESC')
-                // //->offset($offset)
-                // //->limit($limit)
-                // ->get();
-
             ->orderBy('product_order', 'ASC')->paginate($limit)->appends(request()->query());
-
-            // echo "<pre>";
-            // print_r($productLsit->toArray());die;
-            // print_r($productLsit[0]->frontProductImage->graphic);
-            // exit;
-
-            //$productLsit->orderBy('id','DESC')-;
-            //$productLsit = $productLsit->limit();
-
             if ($request->ajax()) {
                 return response()->json([
-                    'html' => view("admin.products.load_more_data", compact('productLsit', 'totalResults', 'limit', 'offset'))->render(),
+                    'html' => view("admin.products.load_more_data", compact('productLsit', 'totalResults', 'limit', 'offset','categories','subCategory','subChildCategory'))->render(),
                     'totalResults' => $totalResults,
                 ]);
             } else {
-
-                $categories = Category::whereNull('parent_id')->where('is_deleted', 0)->get();
-                return view('admin.products.list', compact('productLsit', 'categories', 'totalResults', 'limit', 'offset'));
+                return view('admin.products.list', compact('productLsit', 'categories', 'totalResults', 'limit', 'offset','subCategory','subChildCategory'));
             }
         } catch (Exception $e) {
            Log::error($e);
@@ -1456,7 +1443,7 @@ class ProductController extends Controller
     {
 
         $parentId = $request->parent_id;
-        $subcategories = Category::where('parent_id', $parentId)->get();
+        $subcategories = Category::where('parent_id', $parentId)->where('is_active',1)->where('is_deleted',0)->get();
 
         return response()->json($subcategories);
     }
@@ -1509,8 +1496,6 @@ class ProductController extends Controller
             return response()->json(['message' => 'Something is wrong', 'success' => false, 'error_msg' => $e->getMessage()], 500);
         }
     }
-
-
 
     public function getChildCategories(Request $request)
     {

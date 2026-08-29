@@ -90,19 +90,27 @@
                                         <input type="text" class="form-control" name="sku" placeholder=" SKU"
                                            value="{{ old('name',request()->sku) }}">
                                     </div>
-                                  
-                                    <?php
-                                    use App\Models\Category;
-                                    $categories = Category::whereNull('parent_id')->get();
-                                    ?>
                                     <div class="col-lg-2  mb-lg-5 mb-6">
                                         <label>Category</label>
-                                        <select name="category_id" class="form-control select2init" value="">
+                                        <select name="category_id" class="form-control select2init" id="category_id" value="" onchange="getSubCategory();">
                                             <option value="" selected>Select Category</option>
                                             @foreach ($categories as $category)
                                                 <option value="{{ $category->id }}" {{ $category->id == request()->category_id ? 'selected':'' }}>{{ $category->name }}</option>
                                             @endforeach
-                                           
+                                        </select>
+                                    </div>
+
+                                    <div class="col-lg-2  mb-lg-5 mb-6">
+                                        <label>Sub Category</label>
+                                        <select name="sub_category_id" id="sub_category_id" class="form-control select2init" value="" onchange="getSubChildCategory();">
+                                            <option value="" selected>Select Sub Category</option>   
+                                        </select>
+                                    </div>
+
+                                    <div class="col-lg-2  mb-lg-5 mb-6">
+                                        <label>Sub Child Category</label>
+                                        <select name="sub_child_category_id" id="sub_child_category_id" class="form-control select2init" value="">
+                                            <option value="" selected>Select Sub Child Category</option>    
                                         </select>
                                     </div>
                                     <div class="col-lg-2 mb-lg-5 mb-6">
@@ -137,7 +145,6 @@
                                         </div>
                                     </div>
                                 </form>
-                                
                                 <hr>
                             </div>
                         </div>
@@ -243,7 +250,6 @@
             </div>
         </div>
     </div>
-
     <!-- Price Modal -->
     <div class="modal fade" id="priceModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -261,6 +267,7 @@
             </div>
         </div>
     </div>
+
     <div class="modal fade" id="importProductModal" tabindex="-1">
         <div class="modal-dialog">
             <form action="{{ route('admin-product-products.import') }}" method="POST" enctype="multipart/form-data">
@@ -334,7 +341,60 @@
                 });
             });
         });
+        function getSubCategory(){
+            var parent_id = $('#category_id').val(); 
+            $.ajax({
+                url:"{{ route('admin-product-get-subcategory') }}",
+                method:"GET",
+                data:{
+                    parent_id:parent_id
+                },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success:function(response){
+                    console.log(response); 
+                    $('#sub_category_id').empty();
+                    let s = new Option("Select Sub Category",""); 
+                    $('#sub_category_id').append(s);  
+                    response.forEach(function(item, index) {
+                        let r = `<option value="${item.id}">${item.name}</option>`;
+                        $('#sub_category_id').append(r);
+                    });
+                },
+                error:function(err){
+                    console.log(err); 
+                }
+            });
+        }
 
+        function getSubChildCategory(){
+            var parent_id = $('#sub_category_id').val();
+            $.ajax({
+                url:"{{ route('admin-product-get-subcategory') }}",
+                method:"GET",
+                data:{
+                    parent_id:parent_id
+                },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success:function(response){
+                    console.log(response); 
+                    $('#sub_child_category_id').empty();
+                    let s = new Option("Select Sub Child Category",""); 
+                    $('#sub_child_category_id').append(s);  
+                    response.forEach(function(item, index) {
+                        let r = `<option value="${item.id}">${item.name}</option>`;
+                        $('#sub_child_category_id').append(r);
+                    });
+                },
+                error:function(err){
+                    console.log(err); 
+                }
+            });
+
+        }
         $(document).ready(function() {
             $(document).on('change', '.is-featured-checkbox', function() {
                 var productId = $(this).data('product-id');

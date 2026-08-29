@@ -34,9 +34,7 @@ class ProductTabService
         $productId = $product->id ;  
         \DB::transaction(function () use ($data, $productId) {
 
-            $incomingVariants = $data['variant'] ?? [];
-            // $incomingVariantValues = $data['variant_values'] ?? [];
-                info("-----------incoming variants------step1---------",[$incomingVariants]); 
+            $incomingVariants = $data['variant'] ?? []; 
             $existingVariants = ProductVariant::where('product_id', $productId)->get()->keyBy('variant_id');
             $existingValues = ProductVariantValue::where('product_id', $productId)->get();
             $incomingVariantIds = collect($incomingVariants)->unique()->values();
@@ -70,7 +68,6 @@ class ProductTabService
                 }
             }
 
-            // Now delete ProductVariantValues not in new input
             $validProductVariantIds = $incomingValueMap->pluck('product_variant_id')->toArray();
             $validValueCombos = $incomingValueMap->flatMap(function ($row) {
                 return $row['values']->map(fn($v) => $row['product_variant_id'] . '|' . $v);
@@ -140,122 +137,6 @@ class ProductTabService
 
         return $product;
     }
-
-    public function step2(array $data)
-    {
-        // $productId = $data['product_id'];
-
-        // \DB::transaction(function () use ($data, $productId) {
-
-        //     $incomingVariants = $data['variant'] ?? [];
-        //     $incomingVariantValues = $data['variant_values'] ?? [];
-
-        //     $existingVariants = ProductVariant::where('product_id', $productId)->get()->keyBy('variant_id');
-
-        //     $existingValues = ProductVariantValue::where('product_id', $productId)->get();
-
-        //     $incomingVariantIds = collect($incomingVariants)->unique()->values();
-
-        //     $incomingValueMap = collect();
-
-        //     foreach ($incomingVariants as $i => $variantId) {
-        //         $variantModel = $existingVariants[$variantId] ?? ProductVariant::create([
-        //             'product_id' => $productId,
-        //             'variant_id' => $variantId
-        //         ]);
-
-        //         $incomingValueIds = collect($data['variant_values'][$i])->map(fn($v) => (int) $v)->unique()->values();
-
-        //         $incomingValueMap->push([
-        //             'variant_id' => $variantId,
-        //             'product_variant_id' => $variantModel->id,
-        //             'values' => $incomingValueIds
-        //         ]);
-
-        //         foreach ($incomingValueIds as $valueId) {
-        //             $exists = $existingValues->firstWhere(function ($val) use ($variantModel, $valueId) {
-        //                 return $val->product_variant_id == $variantModel->id && $val->variant_value_id == $valueId;
-        //             });
-
-        //             if (!$exists) {
-        //                 ProductVariantValue::create([
-        //                     'product_variant_id' => $variantModel->id,
-        //                     'variant_value_id'   => $valueId,
-        //                     'product_id'         => $productId
-        //                 ]);
-        //             }
-        //         }
-        //     }
-
-        //     // Now delete ProductVariantValues not in new input
-        //     $validProductVariantIds = $incomingValueMap->pluck('product_variant_id')->toArray();
-        //     $validValueCombos = $incomingValueMap->flatMap(function ($row) {
-        //         return $row['values']->map(fn($v) => $row['product_variant_id'] . '|' . $v);
-        //     })->toArray();
-
-        //     foreach ($existingValues as $value) {
-        //         $key = $value->product_variant_id . '|' . $value->variant_value_id;
-        //         if (!in_array($key, $validValueCombos)) {
-        //             $value->delete();
-        //         }
-        //     }
-
-        //     // Delete variants not in new input
-        //     foreach ($existingVariants as $variantId => $variant) {
-        //         if (!$incomingVariantIds->contains($variantId)) {
-        //             $variant->delete();
-        //         }
-        //     }
-
-        //     // Generate combinations (same as before)
-        //     $variantValueMap = $data['variant_values'] ?? [];
-
-        //     $uniqueGroups = collect($variantValueMap)->unique(function ($item) {
-        //         return implode('_', $item);
-        //     })->values()->toArray();
-
-        //     $combinations = $this->cartesianProduct($uniqueGroups);
-
-        //     foreach ($combinations as $combo) {
-               
-        //       $valueIds = array_map('intval', $combo);
-              
-        //         $jsonCombo = json_encode($valueIds);   
-
-        //         $existing = ProductVariantCombination::where('product_id', $productId)
-        //         ->where('combination_id', $jsonCombo) 
-        //         ->first();
-
-        //         if ($existing) continue;
-                 
-        //         $values = collect($valueIds)
-        //             ->map(function ($id) {
-        //                 return \App\Models\VariantValue::find($id);
-        //             })
-        //             ->filter();
-
-        //             $name = $values->pluck('name')->implode(' ');
-        //             $sku  = strtolower($values->pluck('name')->implode('_'));
-
-        //             ProductVariantCombination::create([
-        //                 'product_id'     => $productId,
-        //                 'sku'            => $sku,
-        //                 'combination_id' => json_encode($valueIds),
-        //                 'name'           => $name,
-        //                 'selling_price'  => 0.0,
-        //                 'price'          => 0.0,
-        //                 'qty'            => 0,
-        //             ]);
-        //     }
-
-        //     $newJsonCombos = collect($combinations)->map(fn($combo) => json_encode(array_map('intval', $combo)))->toArray();
-
-        //     ProductVariantCombination::where('product_id', $productId)
-        //         ->whereNotIn('combination_id', $newJsonCombos)
-        //         ->delete();
-        //     });
-    }
-
     private function cartesianProduct($arrays)
     {
         $result = [[]];
@@ -273,7 +154,7 @@ class ProductTabService
 
     public function step3(array $data): Product
     {
-        info("-------------product data------------",[$data]); 
+        info("----all complete product data--------",$data);
         return DB::transaction(function () use ($data) {
             $productTags = is_array($data['product_tags'] ?? null)
                 ? implode(',', $data['product_tags']) : ($data['product_tags'] ?? '');
@@ -458,22 +339,23 @@ class ProductTabService
 
         $record =  ProductVariant::where('product_id',$product->id)->first();
 
-        foreach($data['variant_id'] as $value){
-            if($getVariantValue->variant_value_id == $value){
-                ProductVariantValue::where('product_id',$product->id)->where('variant_value_id',$value)->update([
-                'is_main'=>1
-                ]);
-            }
-        }
         $submittedCombinations = [];
 
         $totalCombinations = count($data['variant_name'] ?? []);
         for ($i = 0; $i < $totalCombinations; $i++) {
             $product_sku = strtolower(str_replace(' ', '', $data['sku']));
             $varient_sku = strtolower(str_replace(' ', '', $data['variant_sku'][$i]));
-            $varient_sku = strtolower(str_replace($data['sku'].'_', '', $varient_sku));
-            $sku         = $product_sku.'_'.$varient_sku;
+            // $varient_sku = strtolower(str_replace($data['sku'].'_', '', $varient_sku));
             
+            $prefix = $product_sku.'_'; 
+            //$sku         = $product_sku.'_'.$varient_sku;
+                // Main SKU already present hai, dobara add mat karo
+            if (str_starts_with($varient_sku, $prefix)) {
+                $sku = $varient_sku;
+            } else {
+                // Main SKU present nahi hai, first time add karo
+                $sku = $product_sku . '_' . $varient_sku;
+            }
             $combo       = $data['combo'][$i] ?? '';
             $price       = $data['variant_price'][$i] ?? 0;
             $salePrice   = $data['variant_sale_price'][$i] ?? $price;

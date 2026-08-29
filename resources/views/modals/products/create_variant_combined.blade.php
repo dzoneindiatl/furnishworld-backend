@@ -176,14 +176,12 @@ $(function () {
         canAddMore();
     });
 
-    $(document)
-        .on('change', '.variantSelect', function () {
+    $(document).on('change', '.variantSelect', function () {
             loadVariantValues(this).done(() => {
                  canAddMore();
             });
             updateVariantSelectOptions();
-        })
-        .on('change', '.variantValuesSelect', canAddMore)
+        }).on('change', '.variantValuesSelect', canAddMore)
         .on('click', '.removeVariant', function () {
             $(this).closest('.variant-card').remove();
             updateVariantSelectOptions();

@@ -94,7 +94,7 @@
             @endphp
             @if(!empty($firstImage))
             <td>
-                <a href="{{ env('WEBSITE_URL') .'product/'. productSlug($product->name) . '.html/' . productSlug($product->sku) }}"
+                <a href="{{ env('WEBSITE_URL') .'product/product/'. productSlug($product->name) . '.html/' . $product->sku }}"
                      target="_blank">
 					<img src="{{ env('WEBSITE_URL') . 'uploads/products/' . $firstImage }}"
                         height="70px" width="70px" style="border-radius: 10%" class="if">

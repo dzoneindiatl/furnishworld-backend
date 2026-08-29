@@ -54,29 +54,22 @@ class CategoryService
     {
         // DB::beginTransaction();
         // try {
+            info("-----data------",[$data]); 
             $category = $id ? Category::findOrFail($id) : new Category();
-
+            if($category){
+                $data['is_active'] = $category->is_active; 
+                $data['show_on_menu'] = $category->show_on_menu; 
+                $data['show_on_home'] = $category->show_on_home; 
+                $data['is_featured'] = $category->is_featured; 
+            }    
             $slug = Str::slug(Str::lower($data['name']));
-            $duplicateSlug = Category::where('slug', $slug)
-                ->when($id, fn($q) => $q->where('id', '!=', $id))
-                ->exists();
-
-            if ($duplicateSlug) {
-                return ['error' => 'Slug already exists'];
+            $originalSlug = $slug;
+            $count = 2;
+            while (Category::where('slug', $slug)->when($id, fn($q) => $q->where('id', '!=', $id))->exists()){
+                $slug = $originalSlug . '-' . $count;
+                $count++;
             }
-
-            if (empty($data['variantsData']) ) {
-                return ['error' => 'At Least one varient parameter compulsary'];
-            }
-
-            if (empty($data['attributesData']) ) {
-                return ['error' => 'At Least one attribute  parameter  compulsary'];
-            }
-
-            if(empty($data['tax_rate']) ||  empty($data['tax_option']) || empty($data['tax_type'])){ 
-                return ['error' => 'At Least one tax parameter compulsary'];
-            }
-
+            
             $category->fill([
                 'name'              => $data['name'],
                 'slug'              => $slug,
@@ -98,6 +91,7 @@ class CategoryService
                 'show_on_home' => $data['show_on_home'] ?? 0,
                 'show_on_menu' => $data['show_on_menu'] ?? 0,
                 'is_active' => $data['is_active'] ?? 0,
+                'is_featured'=>$data['is_featured'] ?? 0,
                 'url'       => $data['url'] ?? null,
                 'product_detail_manager' => !empty($data['productDetailManager']) ? implode(",",$data['productDetailManager']) : null,
             ]);
@@ -121,22 +115,35 @@ class CategoryService
 
             $category->save();
 
-            // Sync relationships (delete old first if update)
             if ($id) {
                 $category->variants()->delete();
                 $category->attributes()->delete();
                 $category->specifications()->delete();
                 $category->taxes()->delete();
             }
+            if($category->parent_id == null){
+                
+                if (empty($data['variantsData']) ) {
+                    return ['error' => 'At Least one varient parameter compulsary'];
+                }
 
-            $this->attachVariants($category, $data['variantsData'] ?? []);
-            $this->attachAttributes($category, $data['attributesData'] ?? []);
-            $this->attachSpecifications($category, $data['specificationsData'] ?? []);
-            // $this->attachTaxes($category, $data['tax_counts'] ?? []);
-            if(!empty($data['tax_rate']) && !empty($data['tax_option']) && !empty($data['tax_type'])){
-                $this->attachTaxes($category, $data['tax_rate'] ?? [], $data['tax_option'], $data['tax_type']);
+                if (empty($data['attributesData']) ) {
+                    return ['error' => 'At Least one attribute  parameter  compulsary'];
+                }
+
+                if(empty($data['tax_rate']) ||  empty($data['tax_option']) || empty($data['tax_type'])){ 
+                    return ['error' => 'At Least one tax parameter compulsary'];
+                }
+
+                $this->attachVariants($category, $data['variantsData'] ?? []);
+                $this->attachAttributes($category, $data['attributesData'] ?? []);
+                $this->attachSpecifications($category, $data['specificationsData'] ?? []);
+                if(!empty($data['tax_rate']) && !empty($data['tax_option']) && !empty($data['tax_type'])){
+                    $this->attachTaxes($category, $data['tax_rate'] ?? [], $data['tax_option'], $data['tax_type']);
+                }
+                $this->updateSizeChart($category, $data);
             }
-            $this->updateSizeChart($category, $data);
+        
 
             DB::commit();
             return ['success' => true];

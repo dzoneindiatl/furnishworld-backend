@@ -22,7 +22,6 @@ class CreateCategoryRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('categories', 'name')->ignore($id),
             ],
             // Add other rules as needed...
         ];
@@ -31,7 +30,6 @@ class CreateCategoryRequest extends FormRequest
     {
         return [
             'name.required' => 'The name field is required.',
-            'name.unique' => 'A category with this name already exists.',
         ];
     }
 

@@ -327,66 +327,8 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- 4. Pricing --}}
-                <div class="card-header mb-3">
-                    <div class="card-title">
-                        <h6>Pricing </h6>
-                    </div>
-                </div>
-                <hr>
-
-                <div class="row">
-                    <div class="col-4 mb-3">
-                        <label for="buying_price">MRP<span class="text-danger">*</span></label>
-                        <input type="number" id="buying_price" name="buying_price" class="form-control" required
-                            value="{{ $product->buying_price }}" />
-                    </div>
-
-                    <div class="col-4 mb-3">
-                        <label for="discount_type">Discount Type</label>
-                        <select name="discount_type" id="discount_type" class="form-control">
-                            <option value="">Select Discount Type</option>
-                            <option {{ $product->discount_type == 'flat' ? 'selected' : '' }} value="flat">Flat
-                            </option>
-                            <option {{ $product->discount_type == 'percentage' ? 'selected' : '' }}
-                                value="percentage">Percentage</option>
-                        </select>
-                    </div>
-                    <div class="col-4 mb-3">
-                        <label for="discount">Discount</label>
-                        <input type="number" id="discount" name="discount" class="form-control"
-                            value="{{ $product->discount }}" />
-                    </div>
-
-                    <div class="col-4 mb-3">
-                        <label for="selling_price">Selling Price <span class="text-danger">*</span></label>
-                        <input type="number" id="selling_price" name="selling_price" class="form-control" required
-                            readonly value="{{ $product->selling_price }}" />
-                    </div>
-                    <div class="col-4 mb-3">
-                        <label for="qty">Quantity <span class="text-danger">*</span></label>
-                        <input type="number" id="qty" name="qty" class="form-control" required
-                            value="{{ $product->qty }}" />
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col mb-3">
-                        <label for="maxProduct">Maximum Selling Limit (per user)</label>
-                        <input type="number" class="form-control" id="maxProduct" name="max_selling_units"
-                            value="{{ $product->max_selling_units }}">
-                    </div>
-                    <div class="col mb-3">
-                        <label for="minProduct">Minimum Stock Limit</label>
-                        <input type="number" class="form-control" id="minProduct" name="min_selling_units"
-                            value="{{ $product->min_selling_units }}">
-                    </div>
-                </div>
-                
-            </div>
-
-            {{-- Modal for New Attribute --}}
-            <div class="modal fade" id="addAttributeModal" tabindex="-1" aria-labelledby="addAttributeModalLabel"
+                {{-- Modal for New Attribute --}}
+                <div class="modal fade" id="addAttributeModal" tabindex="-1" aria-labelledby="addAttributeModalLabel"
                 aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -417,7 +359,67 @@
                         </div>
                     </div>
                 </div>
+                </div>
+                {{-- 4. Pricing --}}
+                <div class="card-header mb-3">
+                    <div class="card-title">
+                        <h6>Pricing </h6>
+                    </div>
+                </div>
+                <hr>
+
+                <div class="row">
+                    <div class="col-4 mb-3">
+                        <label for="buying_price">MRP<span class="text-danger">*</span></label>
+                        <input type="number" id="buying_price" name="buying_price" class="form-control" required
+                            value="{{ $product->buying_price }}" />
+                    </div>
+
+                    <div class="col-4 mb-3">
+                        <label for="discount_type">Discount Type</label>
+                        <select name="discount_type" id="discount_type" class="form-control">
+                            <option value="">Select Discount Type</option>
+                            <option {{ $product->discount_type == 'flat' ? 'selected' : '' }} value="flat">Flat
+                            </option>
+                            <option {{ $product->discount_type == 'percentage' ? 'selected' : '' }}
+                                value="percentage">Percentage</option>
+                        </select>
+                    </div>
+
+                    <div class="col-4 mb-3">
+                        <label for="discount">Discount</label>
+                        <input type="number" id="discount" name="discount" class="form-control"
+                            value="{{ $product->discount }}" />
+                    </div>
+
+                    <div class="col-4 mb-3">
+                        <label for="selling_price">Selling Price <span class="text-danger">*</span></label>
+                        <input type="number" id="selling_price" name="selling_price" class="form-control" required
+                            readonly value="{{ $product->selling_price }}" />
+                    </div>
+
+                    <div class="col-4 mb-3">
+                        <label for="qty">Quantity <span class="text-danger">*</span></label>
+                        <input type="number" id="qty" name="qty" class="form-control" required
+                            value="{{ $product->qty }}" />
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col mb-3">
+                        <label for="maxProduct">Maximum Selling Limit (per user)</label>
+                        <input type="number" class="form-control" id="maxProduct" name="max_selling_units"
+                            value="{{ $product->max_selling_units }}">
+                    </div>
+                    <div class="col mb-3">
+                        <label for="minProduct">Minimum Stock Limit</label>
+                        <input type="number" class="form-control" id="minProduct" name="min_selling_units"
+                            value="{{ $product->min_selling_units }}">
+                    </div>
+                </div>
+                
             </div>
+
+            
             
             {{-- Variant Section --}}
             <div class="card mt-3">
