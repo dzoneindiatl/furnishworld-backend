@@ -24,6 +24,15 @@ class ProductVariantSpecialization extends Model
         'content_6',
         'content_7',
         'content_8',
+        'content_9',
+        'content_10',
+        'content_11',
+        'content_12',
+        'content_13',
+        'content_14',
+        'content_15',
+        'content_16',
+        'content_19',
         'created_at',
         'updated_at'
     ];
