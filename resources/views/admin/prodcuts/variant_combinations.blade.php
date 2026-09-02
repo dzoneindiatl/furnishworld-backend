@@ -1,5 +1,4 @@
 @foreach ($groupedCombinations as $primaryId => $combos)
-    {{ info('----------combos----------',[$combos]) }}
     @php
         $primaryValue = $primaryValueData[$primaryId] ?? null;
         $images = $graphics[$primaryId . '_image'] ?? collect();
@@ -195,20 +194,15 @@
                         @foreach ($combos as $combo)
                             @php
                                 $ids = explode('_', $combo);
-                                info("------ids------",[$ids]); 
                                 $variantValues = \App\Models\VariantValue::whereIn('id', $ids)->get()->keyBy('id');
-                                info("----variantValues------",[$variantValues]); 
                                 $names = collect($ids)->map(fn($id) => $variantValues[$id]->name ?? '')->toArray();
-                                info("-------names--------",[$names]); 
                                 $variantName = implode(' ', $names);
                                 $variantSKU = strtolower(implode('_', $names));
-                                info("----------variantSKu------",[$variantSKU]); 
                                 $valueIds = array_map('intval', $ids);
                                 
                                 $savedCombo = \App\Models\ProductVariantCombination::where('product_id', $product_id)
                                     ->where('combination_id',json_encode($valueIds))
                                     ->first();
-                                info("--------savedCombo--------",[$savedCombo]); 
                             @endphp
 
                             <?php 

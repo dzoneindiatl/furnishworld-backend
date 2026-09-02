@@ -154,7 +154,6 @@ class ProductTabService
 
     public function step3(array $data): Product
     {
-        info("----all complete product data--------",$data);
         return DB::transaction(function () use ($data) {
             $productTags = is_array($data['product_tags'] ?? null)
                 ? implode(',', $data['product_tags']) : ($data['product_tags'] ?? '');
@@ -416,11 +415,9 @@ class ProductTabService
 
     protected function handleGraphics(Product $product, array $data)
     {
-        $folder_path = strtoupper(date('M') . date('Y')) . "/";
+        $folder_path = strtoupper(date('M') . date('Y')) . "/"; 
         $imagePath = config('constant.PRODUCT_IMAGE_ROOT_PATH').$folder_path;
-
         foreach ($data['variant_images'] ?? [] as $primaryId => $files) {
-            info("------primary_id-------",[$primaryId]); 
             ProductGraphics::where('variant_id', $primaryId)
                 ->where('product_id', $product->id)
                 ->update([
@@ -428,19 +425,21 @@ class ProductTabService
                     'is_back'         => 0,
                     'is_variant_icon' => 0
                 ]);
-
-            foreach ($files as $index => $file) {
-
-                if (!$file || !$file->isValid()) {
-                    continue;
-                }
+                $frontValue = $data['front_image'][$primaryId] ?? null;
+                $backValue  = $data['back_image'][$primaryId] ?? null;
+                $iconValue  = $data['variant_icon'][$primaryId] ?? null;
+                $frontIndex = $frontValue? (int) explode('-', $frontValue)[1]: null;
+                $backIndex = $backValue? (int) explode('-', $backValue)[1]: null;
+                $iconIndex = $iconValue? (int) explode('-', $iconValue)[1]: null;
+                foreach ($files as $index => $file) {
+                    if (!$file || !$file->isValid()) {
+                        continue;
+                    }
 
                 $name = uniqid("variant_{$primaryId}_") . '.webp';
-
                 if (!file_exists($imagePath)) {
                     mkdir($imagePath, 0755, true);
                 }
-
                 $sourcePath = $file->getPathname();
                 $extension = strtolower($file->getClientOriginalExtension());
 
@@ -481,14 +480,7 @@ class ProductTabService
                     continue;
                 }
 
-                // Convert and save as WebP
-                imagewebp(
-                    $sourceImage,
-                    $imagePath . DIRECTORY_SEPARATOR . $name,
-                    85
-                );
-
-                // Free memory
+                imagewebp($sourceImage,$imagePath . DIRECTORY_SEPARATOR . $name,85);
                 imagedestroy($sourceImage);
                 ProductGraphics::create([
                     'product_id'       => $product->id,
@@ -497,40 +489,12 @@ class ProductTabService
                     'graphic_type'     => 'image',
                     'graphic'          => $folder_path . $name,
                     'status'           => 1,
-
-                    'is_front' => isset($data['front_image'][$primaryId])
-                        && $data['front_image'][$primaryId] == "{$primaryId}-{$index}"
-                        ? 1 : 0,
-
-                    'is_back' => isset($data['back_image'][$primaryId])
-                        && $data['back_image'][$primaryId] == "{$primaryId}-{$index}"
-                        ? 1 : 0,
-
-                    'is_variant_icon' => isset($data['variant_icon'][$primaryId])
-                        && $data['variant_icon'][$primaryId] == "{$primaryId}-{$index}"
-                        ? 1 : 0,
+                    'is_front' => ((int) $index === $frontIndex) ? 1 : 0,
+                    'is_back' => ((int) $index === $backIndex) ? 1 : 0,
+                    'is_variant_icon' => ((int) $index === $iconIndex) ? 1 : 0,
                 ]);
             }
         }
-
-        /* foreach ($data['variant_video'] ?? [] as $primaryId => $file) {
-            if ($file->isValid()) {
-                $name = uniqid('variant_video_' . $primaryId . '_') . '.' . $file->getClientOriginalExtension();
-                $file->move($imagePath, $name);
-
-                ProductGraphics::create([
-                    'product_id' => $product->id,
-                    'variant_id' => $primaryId,
-                    'product_type' => 'variant_group',
-                    'graphic_type' => 'video',
-                    'graphic' => $name,
-                    'status' => 1,
-                    'is_front' => 0,
-                    'is_back' => 0,
-                    'is_variant_icon' => 0,
-                ]);
-            }
-        } */
 
         foreach ($data['variant_video'] ?? [] as $primaryId => $file) {
             if ($file->isValid()) {
@@ -557,27 +521,6 @@ class ProductTabService
         }
 
     }
-
-    // public function updateFrontBackVariantImage($variantId, $imgId, $type = 'front'){
-    //     $isExistImg = ProductGraphics::where('variant_id',$variantId)->where('id',$imgId)->first();
-    //     $return = false;
-    //     if(!empty($isExistImg)){
-    //         if($type == 'front') {
-    //             ProductGraphics::where('variant_id',$variantId)->where('id',$imgId)->update(['is_front'=>0]);
-    //             $isExistImg->update(['is_front'=>1]);
-    //             $return = true;
-    //         } else if($type == 'back') {
-    //             ProductGraphics::where('variant_id',$variantId)->where('id',$imgId)->update(['is_back'=>0]);
-    //             $isExistImg->update(['is_back'=>1]);
-    //             $return = true;
-    //         } else if($type == 'icon') {
-    //             ProductGraphics::where('variant_id',$variantId)->where('id',$imgId)->update(['is_variant_icon'=>0]);
-    //             $isExistImg->update(['is_variant_icon'=>1]);
-    //             $return = true;
-    //         }
-    //     }
-    //     return $return;
-    // }
 
     public function updateFrontBackVariantImage( $variantId, $imgId, $type = 'front', $productid)
     {
