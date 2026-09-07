@@ -78,32 +78,44 @@ class ProductController extends Controller
         if (!empty($productIds)) {
             switch ($request->input('bulk_action')) {
                 case 1:
-                    Product::whereIn('id', $productIds)->update(['is_active' => 2]);
+                    Product::whereIn('id', $productIds)->update(['draf' => 1]);
                     break;
-
+                    
                 case 2:
-                    Product::whereIn('id', $productIds)->update(['is_active' => 1]);
+                    Product::whereIn('id', $productIds)->update(['draf' => 0]);
                     break;
 
                 case 3:
-                    Product::whereIn('id', $productIds)->update(['is_active' => 3]);
+                    Product::whereIn('id', $productIds)->update(['is_active' => 1]);
                     break;
 
                 case 4:
-                    Product::whereIn('id', $productIds)->update(['is_featured' => 1]);
+                    Product::whereIn('id', $productIds)->update(['is_active' => 0]);
                     break;
 
                 case 5:
-                    Product::whereIn('id', $productIds)->update(['is_featured' => 0]);
+                    Product::whereIn('id', $productIds)->update(['is_featured' => 1]);
                     break;
 
                 case 6:
-                    Product::whereIn('id', $productIds)->update(['is_new_arrivals' => 1]);
+                    Product::whereIn('id', $productIds)->update(['is_featured' => 0]);
                     break;
 
                 case 7:
-                    Product::whereIn('id', $productIds)->update(['is_new_arrivals' => 0]);
+                    Product::whereIn('id', $productIds)->update(['is_new_arrivals' => 1]);
                     break;
+                
+                case 8: 
+                    Product::whereIn('id', $productIds)->update(['is_new_arrivals' => 0]);
+                    break;  
+
+                case 9: 
+                    Product::whereIn('id',$productIds)->update(['best_seller'=> 1 ]);     
+                    break; 
+
+                case 10:
+                    Product::whereIn('id',$productIds)->update(['best_seller'=>0]); 
+                    break; 
 
                 default:
 
@@ -306,7 +318,7 @@ class ProductController extends Controller
             $order = $request->input('order') ? $request->input('order') : 'desc';
             $offset = !empty($request->input('offset')) ? $request->input('offset') : 0;
             $limit = !empty($request->input('limit')) ? $request->input('limit') : Config("Referral.receiver");
-            $DB = Product::select('id', 'name', 'sku', 'product_type','short_description', 'slug', 'buying_price', 'selling_price', 'category_id', 'sub_category_id', 'main_category_id', 'main_sub_category_id', 'in_stock', 'is_featured', 'is_new_arrivals', 'is_new', 'trending', 'best_selling', 'best_seller', 'is_active', 'draf', 'qty');
+            $DB = Product::select('id', 'name', 'sku', 'product_type','short_description', 'slug', 'buying_price', 'selling_price', 'category_id', 'sub_category_id', 'main_category_id', 'main_sub_category_id', 'in_stock', 'is_featured', 'is_new_arrivals', 'is_new', 'trending', 'best_selling', 'best_seller', 'is_active', 'draf', 'qty')->orderBy("id",'DESC'); 
             $categories = Category::whereNull('parent_id')->where('is_deleted',0)->get();
             $subCategory = Category::select('id','name')->whereIn('parent_id',$categories->pluck('id'))->where('is_deleted',0)->where('is_active',1)->get(); 
             $subChildCategory = Category::select('id','name')->whereIn('parent_id',$subCategory->pluck('id'))->where('is_deleted',0)->where('is_active',1)->get(); 
@@ -366,8 +378,7 @@ class ProductController extends Controller
                 'reviews as new_reviews' => function ($query) {
                     $query->where('created_at', '>=', now()->subDays(7)); // Count reviews from the last 7 days
                 }
-            ])->where('is_deleted', '0')
-            ->orderBy('product_order', 'ASC')->paginate($limit)->appends(request()->query());
+            ])->where('is_deleted', '0')->paginate($limit)->appends(request()->query());
             if ($request->ajax()) {
                 return response()->json([
                     'html' => view("admin.products.load_more_data", compact('productLsit', 'totalResults', 'limit', 'offset','categories','subCategory','subChildCategory'))->render(),
@@ -4795,3 +4806,14 @@ if (!function_exists('resizeImage')) {
         $image->save($newFilePath);
     }
 }
+
+
+
+
+// SET FRONT {variantId: 1, imageId: '7095f43c-e14c-4706-a05b-f4a2008adbd9'}
+// VM5182:653 SET BACK {variantId: 1, imageId: 'c640b28d-5264-4f80-9273-d4816ac68f08'}
+// VM5182:664 SET ICON {variantId: 1, imageId: 'e0b3e651-93e1-4fa5-a166-7fcaa59c4282'}
+
+// VM5182:642 SET FRONT {variantId: 2, imageId: 'd532e044-39e3-49ad-af45-f630923753f5'}
+// VM5182:653 SET BACK {variantId: 2, imageId: 'dad8bd7c-efcd-458f-8762-3920bfcb3612'}
+// VM5182:664 SET ICON {variantId: 2, imageId: '76c47d23-5cb2-4283-b303-b2593e454483'}

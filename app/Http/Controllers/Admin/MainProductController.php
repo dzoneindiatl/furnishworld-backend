@@ -510,9 +510,7 @@ class MainProductController extends Controller
             })
             ->toArray();
         $existingCombos = array_intersect($allCombos, $savedCombos);
-
-
-
+        $productVariantSpecification = ProductVariantSpecialization::whereIn('variant_value_id',$primaryValues)->where('product_id',$product_id)->get();  
         $groupedCombinations = $this->groupByPrimaryVariant($existingCombos, $primaryValues);
         $groupedDeleted = $this->groupByPrimaryVariant($deletedCombos, $primaryValues); // 👈 restore popup के लिए
 
@@ -520,7 +518,8 @@ class MainProductController extends Controller
             'primaryVariantId',
             'groupedCombinations',
             'groupedDeleted',
-            'product_id'
+            'product_id',
+            'productVariantSpecification'
         ))->render();
     }
 
@@ -528,7 +527,6 @@ class MainProductController extends Controller
     {
         // dd($request->all());
         foreach ($request->variants as $variant) {
-
             $comboIds = array_map('intval', explode('_', $variant['combo']));
            
             ProductVariantCombination::updateOrCreate(
@@ -547,17 +545,31 @@ class MainProductController extends Controller
                 ]
             );
         }
+        $primaryVariantId = $request->primary_variant_id;
+        $specification = $request->specification;
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Variants updated successfully'
-        ]);
+        $productSpecification = ProductVariantSpecialization::where('product_id',$request->product_id)->where('variant_value_id',$primaryVariantId)->first();
+         if ($productSpecification) {
+            $productSpecification->update([
+                'content_' . $primaryVariantId => $specification
+            ]);
+
+        } else {
+            ProductVariantSpecialization::create([
+                'product_id'       => $request->product_id,
+                'variant_value_id' => $primaryVariantId,
+                'content_' . $primaryVariantId => $specification
+            ]);
+        }
+            return response()->json([
+                'status' => true,
+                'message' => 'Variants updated successfully'
+            ]);
     }
 
     function updateProductOrder(Request $request)
     {
         $requestOrder    =    $request->input("requestData");
-
         if (!empty($requestOrder)) {
             foreach ($requestOrder as $product_order) {
                 Product::where("id", $product_order["id"])->update(array("product_order" => $product_order["order"]));

@@ -21,6 +21,19 @@
                     Primary Variant: {{ $primaryValue->name }} — {{ count($combos) }} combinations
                 </label>
             </div>
+             <div class="" data-bs-toggle="collapse" href="#collapseExample_{{ $primaryId }}" role="button" aria-expanded="false" aria-controls="collapseExample_{{ $primaryId }}">
+                <div class="form-check form-switch specialization-toggle">
+                    <input class="form-check-input specialization-toggle"
+                        type="checkbox"
+                        data-variant-id="{{ $primaryId }}"
+                        data-product-id="{{ $product_id }}"
+                        id="specialization_toggle_{{ $primaryId }}" checked>     
+                    <label class="form-check-label" for="specialization_toggle_{{ $primaryId }}">
+                        Specification
+                    </label>
+                </div>
+            </div>
+
             <!-- Out of Stock Toggle -->
             <div class="form-check form-switch">
                 <input class="form-check-input out-of-stock-toggle"
@@ -135,6 +148,20 @@
                     </tbody>
                 </table>
             </div>
+            <div  id="collapseExample_{{ $primaryId }}">
+                <div class="card card-body">
+                    <label for="specialization_{{ $primaryId }}" class="form-label fw-semibold">Specification</label>
+                    @if(!empty($productVariantSpecification) && count($productVariantSpecification) > 0)
+                        @foreach($productVariantSpecification as $vl)
+                            @if($vl->variant_value_id == $primaryId)
+                                <textarea class="form-control ck_content" name="content_specification_{{ $primaryId }}" id="specialization_{{ $primaryId }}" rows="4">{!! $vl->{'content_' . $primaryId} ?? '' !!}</textarea>
+                            @endif
+                        @endforeach
+                    @else 
+                        <textarea class="form-control ck_content" name="content_specification_{{ $primaryId }}" id="specialization_{{ $primaryId }}" rows="4"></textarea>   
+                    @endif          
+                </div>
+            </div>
             <div class="text-end mt-3">
                 <button type="button"
                     class="btn btn-primary update-variant-btn"
@@ -143,6 +170,7 @@
                     Update Variants
                 </button>
             </div>
+             
         </div>
     </div>
 @endforeach
@@ -151,25 +179,147 @@
 <script>
 window.currentPrimaryId = '';
 
-function calculateSellingModifyPrice(row) {
-    const price = parseFloat(row.find('.v_input_price').val()) || 0;
-    const discount = parseFloat(row.find('.discount_popup').val()) || 0;
-    const discountType = row.find('.discount_type_popup').val();
+   onDocumentReady(function () {
+    loadCkeditorScript(function () {
+        initVariantSpecializationEditors(document);
+    });
 
-    let sellingPrice = 0;
+});
 
-    if (discountType === 'flat') {
-        sellingPrice = price - discount;
-    } else if (discountType === 'percentage') {
-        sellingPrice = price - ((price * discount) / 100);
-    } else {
-        sellingPrice = price;
+    function onDocumentReady(callback) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', callback);
+        } else {
+            callback();
+        }
     }
 
-    // Prevent negative value, allow decimal up to 2 places
-    sellingPrice = Math.max(sellingPrice, 0);
+    function initVariantSpecializationEditors(container) {
 
-    row.find('.v_input_sale_price').val(sellingPrice.toFixed(2));
+    if (typeof CKEDITOR === 'undefined') {
+
+        console.error('CKEDITOR not loaded');
+
+        return;
+    }
+
+    if (!container) {
+
+        console.error('CKEditor container not found');
+
+        return;
+    }
+
+    CKEDITOR.config.allowedContent = true;
+
+    $(container).find('.ck_content').each(function () {
+
+        const textarea = this;
+
+        // ID nahi hai to unique ID generate karo
+        if (!textarea.id) {
+
+            textarea.id =
+                'ck_content_' +
+                Date.now() +
+                '_' +
+                Math.random()
+                    .toString(36)
+                    .substring(2, 8);
+        }
+
+        console.log(
+            'Initializing CKEditor:',
+            textarea.id
+        );
+
+        // Already initialized hai to skip
+        if (CKEDITOR.instances[textarea.id]) {
+
+            console.log(
+                'Already initialized:',
+                textarea.id
+            );
+
+            return;
+        }
+
+        CKEDITOR.replace(textarea.id, {
+
+            filebrowserUploadUrl: '{{ url("base/uploder") }}',
+
+            enterMode: CKEDITOR.ENTER_BR,
+
+            on: {
+
+                instanceReady: function (ev) {
+
+                    console.log(
+                        'CKEditor READY:',
+                        textarea.id
+                    );
+
+                    ev.editor.setData(textarea.value);
+
+                }
+
+            }
+
+        });
+
+    });
+}
+
+    function loadCkeditorScript(callback) {
+
+        if (typeof CKEDITOR !== 'undefined') {
+            callback();
+            return;
+        }
+
+        let existingScript =document.querySelector('script[data-ckeditor-script="true"]');
+        if (existingScript) {
+            existingScript.addEventListener(
+                'load',
+                function () {callback();}
+            );
+
+            return;
+        }
+
+        var script = document.createElement('script');
+        script.src = '{{ asset("assets/js/ckeditor/ckeditor.js") }}';
+
+        script.setAttribute('data-ckeditor-script','true');
+        script.onload = function () {
+            console.log('CKEditor script loaded');
+            callback();
+        };
+
+        script.onerror = function () {
+            console.error('Unable to load CKEditor script.' );
+        };
+
+        document.head.appendChild(script);
+    }
+
+    function calculateSellingModifyPrice(row) {
+        const price = parseFloat(row.find('.v_input_price').val()) || 0;
+        const discount = parseFloat(row.find('.discount_popup').val()) || 0;
+        const discountType = row.find('.discount_type_popup').val();
+
+        let sellingPrice = 0;
+
+        if (discountType === 'flat') {
+            sellingPrice = price - discount;
+        } else if (discountType === 'percentage') {
+            sellingPrice = price - ((price * discount) / 100);
+        } else {
+            sellingPrice = price;
+        }
+
+        sellingPrice = Math.max(sellingPrice, 0);
+        row.find('.v_input_sale_price').val(sellingPrice.toFixed(2));
 }
 
 $(document).on('input change', '.v_input_price, .discount_popup, .discount_type_popup', function () {
@@ -177,10 +327,10 @@ $(document).on('input change', '.v_input_price, .discount_popup, .discount_type_
     calculateSellingModifyPrice(row);
 });
 
-$(document).on('input change', '.v_input_price, .discount_popup, .discount_type_popup', function () {
-    const row = $(this).closest('tr');
-    calculateSellingModifyPrice(row);
-});
+// $(document).on('input change', '.v_input_price, .discount_popup, .discount_type_popup', function () {
+//     const row = $(this).closest('tr');
+//     calculateSellingModifyPrice(row);
+// });
 
 
 $(document).on('blur', 'input[type="number"]', function () {
@@ -197,13 +347,9 @@ $(document).on('keydown', 'input[type="number"]', function (e) {
     }
 });
 
-
-
-
 </script>
 
 <script>
-    // out of stock varient wise
     document.querySelectorAll('.out-of-stock-toggle').forEach(toggle => {
         toggle.addEventListener('change', function (e) {
 
@@ -243,8 +389,8 @@ $(document).on('keydown', 'input[type="number"]', function (e) {
 </script>
 
 <script>
-$(document).on('click', '.update-variant-btn', function () {
-
+$(document).on('click', '.update-variant-btn', function (e) {
+    e.preventDefault();
     let primaryId = $(this).data('primary-id');
     let productId = $(this).data('product-id');
 
@@ -266,7 +412,12 @@ $(document).on('click', '.update-variant-btn', function () {
             qty: row.find('input[name="variant_qty[]"]').val(),
         });
     });
-
+    if (typeof CKEDITOR !== 'undefined') {
+        Object.keys(CKEDITOR.instances).forEach(function (instance) {
+            CKEDITOR.instances[instance].updateElement();
+        });
+    }
+    let specification = $('#specialization_' + primaryId).val();
     $.ajax({
         url: "{{ route('admin-product-product.prices.update') }}",
         type: "POST",
@@ -274,7 +425,9 @@ $(document).on('click', '.update-variant-btn', function () {
             _token: $('meta[name="csrf-token"]').attr('content'),
             product_id: productId,
             primary_variant_id: primaryId,
-            variants: variants
+            variants: variants,
+            specification:specification,
+
         },
         beforeSend: function () {
             $('.update-variant-btn').prop('disabled', true).text('Saving...');

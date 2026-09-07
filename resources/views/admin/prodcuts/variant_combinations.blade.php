@@ -3,21 +3,11 @@
         $primaryValue = $primaryValueData[$primaryId] ?? null;
         $images = $graphics[$primaryId . '_image'] ?? collect();
         $videos = $graphics[$primaryId . '_video'] ?? collect();
-        $variantCombinationOutOfStock =
-            $outOfStockCombinations
-                ->filter(function ($combination) use ($primaryId) {
+        $variantCombinationOutOfStock = $outOfStockCombinations->filter(function ($combination) use ($primaryId) {
+            $ids = json_decode($combination->combination_id,true);
+            return in_array((int) $primaryId,array_map('intval', $ids ?? []));
+        })->count();
 
-                    $ids = json_decode(
-                        $combination->combination_id,
-                        true
-                    );
-
-                    return in_array(
-                        (int) $primaryId,
-                        array_map('intval', $ids ?? [])
-                    );
-                })
-                ->count();
     @endphp
     <div class="card mb-4 shadow-sm variant_group_row" id="variant_{{ $primaryId }}">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -74,14 +64,13 @@
                     </div>
                 </button>
             </div>
-            @php
-            //prx($images,0);
-            @endphp
             <div class="col">
                 {{-- Image Previews --}}
                 <div class="image-thumbnails-1 d-flex flex-wrap gap-2 mb-2 mt-2">
                     @foreach($images as $k=>$image)
                     @php
+                        $variantId = $image['variant_id'] ?? 0;
+                         $imageId = !empty($image['image_id']) ? $image['image_id']: 'old-' . $image['id'];
                         $frontCheck = !empty($image['is_front'])? "checked":"";
                         $backCheck = !empty($image['is_back'])?"checked":"";
                         $variantIconCheck = !empty($image['is_variant_icon'])?"checked":"";
@@ -90,19 +79,19 @@
                             <img src="{{ $imagePath . $image->graphic }}" alt="Product Image" class="rounded border w-100 " style="object-fit: cover;height:100px"> 
                             <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0 delete-image" data-id="{{ $image->id }}" style="width: 22px; height: 22px; line-height: 1;">×</button>
                             <div class="form-check form-switch d-flex align-items-center justify-content-center mb-0 px-0">
-                                <input class="form-check-input updateFrontBackIcon" type="radio" name="front_image[{{ $image['variant_id'] ?? 0 }}]" data-vid="{{ $image['variant_id'] ?? 0 }}" data-id="{{ $image['id'] }}" data-type="front" data-productId="{{ $image['product_id'] }}" value="{{ $image['variant_id'] ?? 0 }}-{{ $image['id'] }}" {{ $frontCheck }} id="frontSwitch_$image['variant_id']_{{ $image['id'] }}">
+                                <input class="form-check-input updateFrontBackIcon" type="radio" name="front_image[{{ $image['variant_id'] ?? 0 }}]" data-vid="{{ $image['variant_id'] ?? 0 }}" data-id="{{ $image['id'] }}" data-image-id="{{ $imageId }}" data-type="front" data-productId="{{ $image['product_id'] }}"   value="{{ $imageId }}" {{ $frontCheck }} id="frontSwitch_$image['variant_id']_{{ $image['id'] }}">
                                 <label class="form-check-label small" for="frontSwitch_{{ $image['variant_id'] ?? 0 }}_{{ $image['id'] }}">
                                     Front Image
                                 </label>
                             </div>
                             <div class="form-check form-switch d-flex align-items-center justify-content-center px-0">
-                                <input class="form-check-input updateFrontBackIcon" type="radio" name="back_image[{{ $image['variant_id'] ?? 0 }}]" data-vid="{{ $image['variant_id'] ?? 0 }}" data-id="{{ $image['id'] }}" data-type="back" data-productId="{{ $image['product_id'] }}" value="{{ $image['variant_id'] ?? 0 }}-{{ $image['id'] }}" {{ $backCheck }} id="backSwitch_{{ $image['variant_id'] ?? 0 }}_{{ $image['id'] }}">
+                                <input class="form-check-input updateFrontBackIcon" type="radio" name="back_image[{{ $image['variant_id'] ?? 0 }}]" data-vid="{{ $image['variant_id'] ?? 0 }}" data-id="{{ $image['id'] }}" data-image-id="{{ $imageId }}" data-type="back" data-productId="{{ $image['product_id'] }}"   value="{{ $imageId }}" {{ $backCheck }} id="backSwitch_{{ $image['variant_id'] ?? 0 }}_{{ $image['id'] }}">
                                 <label class="form-check-label small" for="backSwitch_{{ $image['variant_id'] ?? 0 }}_{{ $image['id'] }}">
                                     Back Image
                                 </label>
                             </div>
                             <div class="form-check form-switch d-flex align-items-center justify-content-center px-0">
-                                <input class="form-check-input updateFrontBackIcon" type="radio" name="variant_icon[{{ $image['variant_id'] ?? 0 }}]" data-vid="{{ $image['variant_id'] ?? 0 }}" data-id="{{ $image['id'] }}" data-type="icon" data-productId="{{ $image['product_id'] }}" value="{{ $image['variant_id'] ?? 0 }}-{{ $image['id'] }}" {{ $variantIconCheck }} id="iconSwitch_{{ $image['variant_id'] ?? 0 }}_{{ $image['id'] }}">
+                                <input class="form-check-input updateFrontBackIcon" type="radio" name="variant_icon[{{ $image['variant_id'] ?? 0 }}]" data-vid="{{ $image['variant_id'] ?? 0 }}" data-id="{{ $image['id'] }}" data-image-id="{{ $imageId }}" data-type="icon" data-productId="{{ $image['product_id'] }}"   value="{{ $imageId }}" {{ $variantIconCheck }} id="iconSwitch_{{ $image['variant_id'] ?? 0 }}_{{ $image['id'] }}">
                                 <label class="form-check-label small" for="iconSwitch_{{ $image['variant_id'] ?? 0 }}_{{ $image['id'] }}">
                                 Variant Icon
                                 </label>
@@ -311,60 +300,6 @@
     </div>
 </div>
 
-
-{{-- <div style="display: none;">
-    @foreach ($groupedDeleted as $primaryId => $combinations)
-        <table>
-            <tbody id="restore_pool_{{ $primaryId }}">
-                @foreach ($combinations as $combo)
-                    @php
-                        $ids = explode('_', $combo);
-                        $variantValues = \App\Models\VariantValue::whereIn('id', $ids)->get()->keyBy('id');
-                        $names = collect($ids)->map(fn($id) => $variantValues[$id]->name ?? '')->toArray();
-                        $variantName = implode(' ', $names);
-                        $variantSKU = strtolower(implode('_', $names));
-                    @endphp
-
-                    <tr id="variant_combo_{{ $combo }}" data-combo-id="{{ $combo }}"
-                        data-variant-name="{{ $variantName }}" data-variant-sku="SKU_{{ $variantSKU }}"
-                        style="display: none;">
-                        <td>
-                            <span class="v_name">{{ $variantName }}</span>
-
-                            <input type="hidden" name="combo[]" value="{{ $combo }}">
-                            <input type="hidden" name="variant_name[]" value="{{ $variantName }}">
-                            <input type="hidden" name="variant_id[]" value="{{ $primaryId }}">
-                        </td>
-                        <td>
-                            <div class="input-group">
-                                <span class="input-group-text dynamic-sku-prefix">SKU_</span>
-                                <input type="text" name="variant_sku[]" class="v_input_sku form-control" value="{{ $variantSKU }}">
-                            </div>
-                        </td>
-                        <td><input type="number" min="0" name="variant_price[]" class="v_input_price form-control" value="0.00"></td>
-                        <td>
-                            <select name="variant_discount_type[]" class="discount_type_popup form-control">
-                                <option value="" selected>None</option>
-                                <option value="flat">Flat</option>
-                                <option value="percentage">%</option>
-                            </select>
-                        </td>
-                        <td><input type="number" min="0" name="variant_discount[]" class="discount_popup form-control" value=""></td>
-                        <td><input type="number" min="0" name="variant_sale_price[]" class="v_input_sale_price form-control" value="0" readonly></td>
-                        <td><input type="number" min="0" name="variant_qty[]" class="v_input_quantity form-control" value="0"></td>
-                        <td>
-                            <a href="javascript:void(0)" class="text-danger" onclick="deleteVariantRow('{{ $primaryId }}', '{{ $combo }}', this)">
-                                <i class="ri-delete-bin-5-line fs-5"></i>
-                            </a>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    @endforeach
-</div> --}}
-
-
 <script>
 window.currentPrimaryId = '';
 function deleteVariantRow(primaryId, comboId, el) {
@@ -384,41 +319,6 @@ function deleteVariantRow(primaryId, comboId, el) {
     restoreList.appendChild(row);
     row.style.display = 'none';
 }
-
-// function openRestoreModal(primaryId) {
-//     window.currentPrimaryId = primaryId;
-
-//     const pool = document.getElementById(`restore_pool_${primaryId}`);
-//     const listContainer = document.getElementById('restoreVariantList');
-//     listContainer.innerHTML = '';
-
-//     if (pool) {
-//         const rows = pool.querySelectorAll('tr');
-//         rows.forEach(row => {
-//             const comboId = row.getAttribute('data-combo-id');
-//             const name = row.getAttribute('data-variant-name');
-//             const sku = row.getAttribute('data-variant-sku');
-
-//             const checkbox = document.createElement('input');
-//             checkbox.type = 'checkbox';
-//             checkbox.className = 'form-check-input me-2';
-//             checkbox.value = comboId;
-
-//             const label = document.createElement('label');
-//             label.className = 'form-check-label';
-//             label.textContent = `${name} — ${sku}`;
-
-//             const wrapper = document.createElement('div');
-//             wrapper.className = 'form-check mb-2';
-//             wrapper.appendChild(checkbox);
-//             wrapper.appendChild(label);
-
-//             listContainer.appendChild(wrapper);
-//         });
-//     }
-
-//     new bootstrap.Modal(document.getElementById('restoreVariantModal')).show();
-// }
 
 function restoreSelectedVariants() {
     const checkboxes = document.querySelectorAll('#restoreVariantList input[type="checkbox"]:checked');
@@ -470,10 +370,10 @@ $(document).on('input change', '.v_input_price, .discount_popup, .discount_type_
     calculateSellingModifyPrice(row);
 });
 
-$(document).on('input change', '.v_input_price, .discount_popup, .discount_type_popup', function () {
-    const row = $(this).closest('tr');
-    calculateSellingModifyPrice(row);
-});
+// $(document).on('input change', '.v_input_price, .discount_popup, .discount_type_popup', function () {
+//     const row = $(this).closest('tr');
+//     calculateSellingModifyPrice(row);
+// });
 
 $(document).on('change', '.updateFrontBackIcon', function () {
     let vid = $(this).data('vid');
@@ -494,8 +394,7 @@ $(document).on('change', '.updateFrontBackIcon', function () {
             }
         });
     }
-    //const row = $(this).closest('tr');
-    //calculateSellingModifyPrice(row);
+
 });
 
 
