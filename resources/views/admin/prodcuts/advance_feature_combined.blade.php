@@ -99,7 +99,7 @@
             <div class="card-body">
                 <div class="row">
                     <input type="hidden" name="product_id" id="product_id" value="{{ $product->id }}">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="form-group">
                             <label for="name">Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="product_name" class="form-control @error('name') is-invalid @enderror" value="{{ $product->name }}" required>
@@ -110,8 +110,23 @@
                             @endif
                         </div>
                     </div>
+
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="form-group">
+                            <label for="status">Status <span class="text-danger">*</span></label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="">Select Status</option>
+                                <option value="1" @if($product->is_active == 1) selected @endif>Published</option>
+                                <option value="0" @if($product->is_active == 0) selected @endif>Unpublished</option>
+                                <option value="2" @if($product->is_active == 2) selected @endif>Draft</option>
+                            </select>
+                        </div>
+                        <span id="productStatusError"></span>
+                    </div>
+                    
                     <!-- Add Code of Mohit -->
-                    <div class="col-md-6  mb-3">
+                    <div class="col-md-4  mb-3">
                         <div class="form-group">
                             <label for="weight_type">Country Of Origin <span class="text-danger">*</span></label>
                             <select name="country_origin" class="form-control" required>
@@ -903,9 +918,17 @@
             var globalBuyingPrice = $('#buying_price').val(); 
             var globalQty = $('#qty').val(); 
             var globalProductName = $('#product_name').val(); 
+
+            var globalProductStatus = $('#status').val(); 
+
             if(globalProductName == '' || globalProductName == null || globalProductName.length < 3 || globalProductName.length > 254){
                 $('#productNameError').text("Please Enter Product Name");
                 return false;  
+            }
+
+            if(globalProductStatus == '' || globalProductStatus == null){
+                $('#productStatusError').text('Please Select any status'); 
+                return false; 
             }
 
             if(globalSku == '' || globalSku == null ){
@@ -918,8 +941,8 @@
                   return false; 
             }
 
-            if(globalQty == '' || globalQty == null){
-                $('#qtyError').text("Please Enter Product Qty"); 
+            if(globalQty == '' || globalQty == null || globalQty == 0){ 
+                $('#qtyError').text("Please Enter Product Quantity"); 
                   return false; 
             }
 

@@ -527,7 +527,7 @@ function previewImages(event, variantId) {
     Array.from(files).forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = function (e) {
-            const imageId = crypto.randomUUID();
+             const imageId = generateImageId();
             window.uploadedImages[variantId].push({
                 imageId: imageId,
                 url: e.target.result,
@@ -671,6 +671,12 @@ function setVariantIcon(variantId, imageId) {
     renderPreviews(variantId);
 }
 
+function generateImageId() {
+    return 'img_' +
+        Date.now() +
+        '_' +
+        Math.random().toString(36).substring(2, 15);
+}
 // ===================== Video Preview =====================
 function previewVideo(event, variantId) {
     const file = event.target.files[0];

@@ -86,11 +86,11 @@ class ProductController extends Controller
                     break;
 
                 case 3:
-                    Product::whereIn('id', $productIds)->update(['is_active' => 1]);
+                    Product::whereIn('id', $productIds)->update(['is_active' => "1"]);
                     break;
 
                 case 4:
-                    Product::whereIn('id', $productIds)->update(['is_active' => 0]);
+                    Product::whereIn('id', $productIds)->update(['is_active' => "0"]);
                     break;
 
                 case 5:

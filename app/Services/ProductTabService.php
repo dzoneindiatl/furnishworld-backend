@@ -179,15 +179,11 @@ class ProductTabService
             }
             
             if(isset($data['save_as_draf']) && !empty($data['save_as_draf'])){
-                if($data['save_as_draf'] == 1){
-                    $data['draf'] = 1; 
-                    $data['is_active'] = 0 ; 
-                }
+                $data['is_active']= "2";  
             }  
             else{
-                $data['draf'] = 0 ; 
+                $data['is_active'] = $data['status']; 
             }
-
             $finalData = [
                 'parent_id' => 0,
                 'name' => $data['name'],
@@ -228,7 +224,7 @@ class ProductTabService
                 'product_tags' => $productTags,
 
                 // Status & Flags
-                'draf' => $data['draf'],
+                'draf' => $data['is_active'],
                 'is_active' => $data['is_active'] ?? 1,
                 'is_new' => isset($data['is_new']) ? 1 : 0,
                 'is_new_arrivals' => isset($data['is_new_arrivals']) ? 1 : 0,

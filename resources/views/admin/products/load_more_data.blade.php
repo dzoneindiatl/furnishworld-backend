@@ -163,12 +163,12 @@
                     data-product-id="{{ $product->id }}"
                     {{ $product->is_new_arrivals ? 'checked' : '' }}>
                 <br>
-                Is Active
+                {{-- Is Active
                 <input type="checkbox"
                     class="toggle-checkbox"
                     data-field="is_active"
                     data-product-id="{{ $product->id }}"
-                    {{ $product->is_active ? 'checked' : '' }}>
+                    {{ $product->is_active ? 'checked' : '' }}> --}}
                
             </td>
             <?php 
@@ -188,9 +188,25 @@
                 </label>
             </td>
             <td class="move-line publish-status">
-                <span id="publish_{{ $product->id }}"  class="{{ $product->is_active == 1 ? 'text-success' : '' }}">  Publish  </span> <br>
-                <span id="unPublish_{{ $product->id }}" class="{{ $product->is_active != 1 ? 'text-success' : '' }}">Unpublished </span><br>
-                <span id="draf_{{ $product->id }}" class="{{ $product->draf == 1 ? 'text-success' : '' }}"> Draf  </span>
+                @php   
+                    $status = "" ; 
+                    if($product->is_active == "1"){
+                        $status = "Published"; 
+                    }
+                    if($product->is_active == "0"){
+                        $status = "Unpublished"; 
+                    }
+                    if($product->is_active == "2"){
+                        $status = "Draft"; 
+                    }
+                @endphp 
+                @if($status == "Published")
+                    <span class="text-success">{{ $status}}</span>
+                @elseif($status == "Unpublished")   
+                    <span class="text-danger">{{ $status }}</span>
+                @else
+                    <span class="text-warning">{{ $status }}</span>
+                @endif      
             </td>
             <td class="move-line">
                 <div class="input-group qty-group" data-product-id="{{ $product->id }}">
