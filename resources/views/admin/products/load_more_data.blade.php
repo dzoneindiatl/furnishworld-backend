@@ -163,12 +163,19 @@
                     data-product-id="{{ $product->id }}"
                     {{ $product->is_new_arrivals ? 'checked' : '' }}>
                 <br>
-                {{-- Is Active
+                Is Featured
                 <input type="checkbox"
                     class="toggle-checkbox"
-                    data-field="is_active"
+                    data-field="is_featured"
                     data-product-id="{{ $product->id }}"
-                    {{ $product->is_active ? 'checked' : '' }}> --}}
+                    {{ $product->is_featured ? 'checked' : '' }}>
+                <br>
+                Is Featured
+                <input type="checkbox"
+                    class="toggle-checkbox"
+                    data-field="trending"
+                    data-product-id="{{ $product->id }}"
+                    {{ $product->trending ? 'checked' : '' }}>    
                
             </td>
             <?php 

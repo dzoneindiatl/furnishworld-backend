@@ -4749,7 +4749,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'field' => 'required|in:in_stock,is_featured,is_active,best_seller,is_new_arrivals',
+            'field' => 'required|in:in_stock,is_featured,is_active,best_seller,is_new_arrivals,trending',
             'value' => 'required|boolean',
         ]);
 
