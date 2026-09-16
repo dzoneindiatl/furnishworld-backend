@@ -109,6 +109,7 @@
                                 </div>
                             @endif
                         </div>
+                        <span id="productNameError"></span>
                     </div>
 
                     

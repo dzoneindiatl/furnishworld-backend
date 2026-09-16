@@ -78,11 +78,11 @@ class ProductController extends Controller
         if (!empty($productIds)) {
             switch ($request->input('bulk_action')) {
                 case 1:
-                    Product::whereIn('id', $productIds)->update(['draf' => 1]);
+                    Product::whereIn('id', $productIds)->update(['is_active' => "1"]);
                     break;
                     
                 case 2:
-                    Product::whereIn('id', $productIds)->update(['draf' => 0]);
+                    Product::whereIn('id', $productIds)->update(['is_active' => "2"]);
                     break;
 
                 case 3:
